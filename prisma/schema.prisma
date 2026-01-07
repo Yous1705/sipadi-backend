@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client-js"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum AttendanceStatus {
+  HADIR
+  IZIN
+  SAKIT
+  ALPHA
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+  role     Role
+
+  homeroomClasses Class[]  @relation("HomeroomTeacher")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  classId Int?
+  class   Class? @relation("StudentClass", fields: [classId], references: [id])
+
+  teachingAssigment TeachingAssigment[]
+  attendances       Attendance[]
+  submissions       Submission[]
+}
+
+model Class {
+  id   Int    @id @default(autoincrement())
+  name String
+  year Int
+
+  homeroomTeacherId Int?
+  homeroomTeacher   User?    @relation(name: "HomeroomTeacher", fields: [homeroomTeacherId], references: [id])
+  createdAt         DateTime @default(now())
+
+  students          User[]              @relation("StudentClass")
+  teachingAssigment TeachingAssigment[]
+}
+
+model Subject {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+
+  teachingAssigment TeachingAssigment[]
+}
+
+model Attendance {
+  id     Int              @id @default(autoincrement())
+  date   DateTime
+  status AttendanceStatus
+  note   String?
+
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+
+  teachingAssigmentId Int
+  teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
+  createdAt           DateTime          @default(now())
+
+  @@unique([studentId, teachingAssigmentId, date])
+}
+
+model Assignment {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  dueDate     DateTime
+
+  teachingAssigmentId Int
+  teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
+  submissions         Submission[]
+  createdAt           DateTime          @default(now())
+}
+
+model TeachingAssigment {
+  id        Int  @id @default(autoincrement())
+  teacherId Int
+  teacher   User @relation(fields: [teacherId], references: [id])
+
+  classId Int
+  class   Class @relation(fields: [classId], references: [id])
+
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  assignment  Assignment[]
+  attendances Attendance[]
+
+  @@unique([teacherId, classId, subjectId])
+}
+
+model Submission {
+  id       Int     @id @default(autoincrement())
+  fileUrl  String
+  score    Int?
+  feedback String?
+
+  assignmentId Int
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+
+  submittedAt DateTime @default(now())
+}
