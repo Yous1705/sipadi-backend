@@ -26,6 +26,14 @@ export class AuthService {
       where: { email: data.email },
     });
 
+    const accountActive = await this.prisma.user.findMany({
+      where: { email: data.email, isActive: true },
+    });
+
+    if (!accountActive) {
+      throw new UnauthorizedException('Account is not active');
+    }
+
     if (!user) {
       throw new UnauthorizedException('Invalid email');
     }

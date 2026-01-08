@@ -10,6 +10,9 @@ import { Subject } from 'rxjs';
 export class AdminRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  // ==================================
+  //  FIND USEERS
+  // ===================================
   findUserByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
@@ -22,13 +25,13 @@ export class AdminRepository {
 
   findAllStudents() {
     return this.prisma.user.findMany({
-      where: { role: Role.STUDENT },
+      where: { role: Role.STUDENT, isActive: true },
     });
   }
 
   findAllTeachers() {
     return this.prisma.user.findMany({
-      where: { role: Role.TEACHER },
+      where: { role: Role.TEACHER, isActive: true },
     });
   }
 
@@ -40,6 +43,7 @@ export class AdminRepository {
     return this.prisma.user.findMany({
       where: {
         role: Role.TEACHER,
+        isActive: true,
         teachingAssigment: {
           some: {
             subject: {
@@ -54,6 +58,9 @@ export class AdminRepository {
     });
   }
 
+  // ==========================================
+  //  CREATE
+  // =======================================
   async createStudent(data: {
     name: string;
     email: string;
@@ -86,21 +93,6 @@ export class AdminRepository {
         classId: data.classId,
         role: Role.STUDENT,
       },
-    });
-  }
-
-  async moveStudent(data: { studentId: number; classId: number }) {
-    const student = await this.prisma.user.findUnique({
-      where: { id: data.studentId, role: Role.STUDENT },
-    });
-
-    if (!student) {
-      throw new BadRequestException('Student not found');
-    }
-
-    return this.prisma.user.update({
-      where: { id: data.studentId },
-      data: { class: { connect: { id: data.classId } } },
     });
   }
 
@@ -139,6 +131,40 @@ export class AdminRepository {
     });
   }
 
+  // ==========================================
+  // uPDATE
+  // =======================================
+  async moveStudent(data: { studentId: number; classId: number }) {
+    const student = await this.prisma.user.findFirst({
+      where: { id: data.studentId, role: Role.STUDENT, isActive: true },
+    });
+
+    const studentClass = await this.prisma.class.findUnique({
+      where: { id: data.classId },
+    });
+
+    if (!student) {
+      throw new BadRequestException('Student not found');
+    }
+
+    if (!studentClass) {
+      throw new BadRequestException('Class not found');
+    }
+
+    return this.prisma.user.update({
+      where: { id: data.studentId },
+      data: { class: { connect: { id: data.classId } } },
+      include: {
+        class: {
+          select: {
+            name: true,
+            year: true,
+          },
+        },
+      },
+    });
+  }
+
   updateClass(classId: number, data: { name?: string; year?: number }) {
     return this.prisma.class.update({
       where: { id: classId },
@@ -151,7 +177,7 @@ export class AdminRepository {
 
   async assignHomeroomTeacher(data: { classId: number; teacherId: number }) {
     const teacher = await this.prisma.user.findUnique({
-      where: { id: data.teacherId },
+      where: { id: data.teacherId, isActive: true },
     });
 
     if (!teacher || teacher.role !== Role.TEACHER) {
@@ -180,6 +206,14 @@ export class AdminRepository {
     classId: number;
     subjectId: number;
   }) {
+    const teacher = await this.prisma.user.findUnique({
+      where: { id: data.teacherId, isActive: true },
+    });
+
+    if (!teacher || teacher.role !== Role.TEACHER) {
+      throw new BadRequestException('User is not a teacher');
+    }
+
     return this.prisma.teachingAssigment.create({
       data: {
         teacher: { connect: { id: data.teacherId } },
@@ -212,7 +246,26 @@ export class AdminRepository {
     });
   }
 
+  // ==========================================
+  // DELETE
+  // =======================================
   async deleteUser(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (user.role === Role.ADMIN) {
+      throw new BadRequestException('Cannot delete admin user');
+    }
+
+    if (!user.isActive) {
+      throw new BadRequestException('User is already inactive');
+    }
+
     await this.prisma.user.delete({
       where: { id: userId },
     });
