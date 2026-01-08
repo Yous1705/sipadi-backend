@@ -1,3 +1,4 @@
+import { UpdateTeacherDto } from './dto/updatee-teacher.dto';
 import { Subject } from 'rxjs';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { AdminRepository } from './admin.repository';
@@ -10,6 +11,9 @@ import { UpdateClassDto } from './dto/update-class.dto';
 import { AssignHomeroomTeacherDto } from './dto/assign-homeroom-teacher.dto';
 import { AssignTeacherDto } from './dto/assign-teacher.dto';
 import { CreateSubjectDto } from './dto/create-subject.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import { Role } from '@prisma/client';
+import { AttendanceFilterDto } from './dto/attendance-filter.dto';
 
 @Injectable()
 export class AdminService {
@@ -79,5 +83,45 @@ export class AdminService {
 
   findTeacherBySubject(subjectName: string) {
     return this.repo.findTeacherBySubject(subjectName);
+  }
+
+  removeStudentFromClass(studentId: number) {
+    return this.repo.removeStudentFromClass(studentId);
+  }
+
+  updateStudent(studentId: number, dto: UpdateStudentDto) {
+    return this.repo.updateStudent(studentId, dto);
+  }
+
+  updateTeacher(teacherId: number, dto: UpdateTeacherDto) {
+    return this.repo.updateTeacher(teacherId, dto);
+  }
+
+  resetPassword(userId: number, newPassword: string) {
+    return this.repo.resetPassword(userId, newPassword);
+  }
+
+  restoreUser(userId: number) {
+    return this.repo.restoreUser(userId);
+  }
+
+  changeUserRole(userId: number, newRole: Role) {
+    return this.repo.changeUserRole(userId, newRole);
+  }
+
+  deleteClass(classId: number) {
+    return this.repo.deleteClass(classId);
+  }
+
+  findAllAttendances() {
+    return this.repo.findAllAttendances();
+  }
+
+  findAttendancesByFilter(dto: AttendanceFilterDto) {
+    return this.repo.findAttendancesByFilter(dto);
+  }
+
+  deleteAttendance(attendanceId: number) {
+    return this.repo.deleteAttendance(attendanceId);
   }
 }

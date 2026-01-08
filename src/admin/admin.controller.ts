@@ -22,6 +22,9 @@ import { UpdateClassDto } from './dto/update-class.dto';
 import { AssignHomeroomTeacherDto } from './dto/assign-homeroom-teacher.dto';
 import { AssignTeacherDto } from './dto/assign-teacher.dto';
 import { CreateSubjectDto } from './dto/create-subject.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import { UpdateTeacherDto } from './dto/updatee-teacher.dto';
+import { AttendanceFilterDto } from './dto/attendance-filter.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -69,14 +72,47 @@ export class AdminController {
     return this.adminService.assignTeacher(dto);
   }
 
-  // @Delete('unassign-teacher/:id')
-  // unassignTeacher(@Param('id') id: string) {
-  //   return this.adminService.unassignTeacher(+id);
-  // }
+  @Patch('update-student/:id')
+  updateStudent(@Param('id') id: string, @Body() dto: UpdateStudentDto) {
+    return this.adminService.updateStudent(+id, dto);
+  }
+
+  @Patch('update-teacher/:id')
+  updateTeacher(@Param('id') id: string, @Body() dto: UpdateTeacherDto) {
+    return this.adminService.updateTeacher(+id, dto);
+  }
+
+  @Patch('reset-password/:id')
+  resetPassword(
+    @Param('id') id: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.adminService.resetPassword(+id, newPassword);
+  }
+
+  @Patch('restore-user/:id')
+  restoreUser(@Param('id') id: string) {
+    return this.adminService.restoreUser(+id);
+  }
+
+  @Patch('change-user-role/:id')
+  chnageUserRole(@Param('id') id: string, @Body('newRole') newRole: Role) {
+    return this.adminService.changeUserRole(+id, newRole);
+  }
 
   @Delete('delete-user/:id')
   deleteUser(@Param('id') id: string) {
     return this.adminService.deleteUser(+id);
+  }
+
+  @Delete('delete-class/:id')
+  deleteClass(@Param('id') id: string) {
+    return this.adminService.deleteClass(+id);
+  }
+
+  @Delete('remove-student-from-class/:id')
+  removeStudentFromClass(@Param('id') id: string) {
+    return this.adminService.removeStudentFromClass(+id);
   }
 
   @Get('users')
@@ -99,6 +135,16 @@ export class AdminController {
     return this.adminService.findUsersByEmail(email);
   }
 
+  @Get('attendances')
+  findAllAttendances() {
+    return this.adminService.findAllAttendances();
+  }
+
+  @Get('attendances/filter')
+  findAttendancesByFilter(@Body() dto: AttendanceFilterDto) {
+    return this.adminService.findAttendancesByFilter(dto);
+  }
+
   @Get('classes')
   findAllClasses() {
     return this.adminService.findAllClasses();
@@ -107,5 +153,10 @@ export class AdminController {
   @Get('teachers-by-subject')
   findTeacherBySubject(@Body('subjectName') subjectName: string) {
     return this.adminService.findTeacherBySubject(subjectName);
+  }
+
+  @Delete('delete-attendance/:id')
+  deleteAttendance(@Param('id') id: string) {
+    return this.adminService.deleteAttendance(+id);
   }
 }
