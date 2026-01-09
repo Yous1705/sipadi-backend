@@ -121,6 +121,7 @@ model Submission {
   fileUrl  String
   score    Int?
   feedback String?
+  createdAt  DateTime @default(now())
 
   assignmentId Int
   assignment   Assignment @relation(fields: [assignmentId], references: [id])
@@ -129,4 +130,5 @@ model Submission {
   student   User @relation(fields: [studentId], references: [id])
 
   submittedAt DateTime @default(now())
+  @@unique([studentId, assignmentId])
 }

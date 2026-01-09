@@ -1,3 +1,4 @@
+import { UpdateSubmissionScoreDto } from './dto/update-submission.dto';
 import {
   Controller,
   Get,
@@ -25,6 +26,12 @@ import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { UpdateTeacherDto } from './dto/updatee-teacher.dto';
 import { AttendanceFilterDto } from './dto/attendance-filter.dto';
+import { AssignmentFilterDto } from './dto/assignment-filter.dto';
+import { SubmissionFilterDto } from './dto/submission-filter.dto';
+import { CreateAttendanceDto } from './dto/ccreate-attendance.dto';
+import { UpdateAttendanceDto } from './dto/update-attendance.dto';
+import { UpdateAssignmentDto } from './dto/update-assignment.dto';
+import { CreateSubmissionDto } from './dto/create-submission.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -158,5 +165,63 @@ export class AdminController {
   @Delete('delete-attendance/:id')
   deleteAttendance(@Param('id') id: string) {
     return this.adminService.deleteAttendance(+id);
+  }
+
+  @Get('assignments')
+  findAllAssignments() {
+    return this.adminService.findAllAssignments();
+  }
+
+  @Get('assignments/filter')
+  findAssignmentsByFilter(@Body() dto: AssignmentFilterDto) {
+    return this.adminService.findAssignmentByFilter(dto);
+  }
+
+  @Delete('delete-assignment/:id')
+  deleteAssignment(@Param('id') id: string) {
+    return this.adminService.deleteAssigment(+id);
+  }
+
+  @Get('submissions')
+  findAllSubmissions() {
+    return this.adminService.findAllSubmissions();
+  }
+
+  @Get('submissions/filter')
+  findSubmissionsByFilter(@Body() dto: SubmissionFilterDto) {
+    return this.adminService.findSubmissionByFilter(dto);
+  }
+
+  @Delete('delete-submission/:id')
+  deleteSubmission(@Param('id') id: string) {
+    return this.adminService.deleteSubmission(+id);
+  }
+
+  @Post('create-attendance')
+  createAttendance(@Body() dto: CreateAttendanceDto) {
+    return this.adminService.createAttendance(dto);
+  }
+
+  @Patch('update-attendance/:id')
+  updateAttendance(@Param('id') id: string, @Body() dto: UpdateAttendanceDto) {
+    return this.adminService.updateAttendance(+id, dto);
+  }
+
+  @Patch('update-assignment/:id')
+  updateAssignment(@Param('id') id: string, @Body() dto: UpdateAssignmentDto) {
+    return this.adminService.updateAssignment(+id, dto);
+  }
+
+  @Patch('update-submission-score/:id')
+  updateSubmissionScore(
+    @Param('id') id: string,
+    @Body() dto: UpdateSubmissionScoreDto,
+  ) {
+    return this.adminService.updateSubmissionScore(+id, dto);
+  }
+
+  @Post('create-submission')
+  createSubmission(@Body() dto: CreateSubmissionDto) {
+    return this.adminService.createSubmission(dto);
   }
 }

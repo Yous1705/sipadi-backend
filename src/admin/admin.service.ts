@@ -1,3 +1,5 @@
+import { UpdateSubmissionScoreDto } from './dto/update-submission.dto';
+import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { UpdateTeacherDto } from './dto/updatee-teacher.dto';
 import { Subject } from 'rxjs';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -14,6 +16,12 @@ import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { Role } from '@prisma/client';
 import { AttendanceFilterDto } from './dto/attendance-filter.dto';
+import { AssignmentFilterDto } from './dto/assignment-filter.dto';
+import { SubmissionFilterDto } from './dto/submission-filter.dto';
+import { CreateAttendanceDto } from './dto/ccreate-attendance.dto';
+import { UpdateAttendanceDto } from './dto/update-attendance.dto';
+import { CreateAssignmentDto } from './dto/create-assignmnet.dto';
+import { CreateSubmissionDto } from './dto/create-submission.dto';
 
 @Injectable()
 export class AdminService {
@@ -121,7 +129,55 @@ export class AdminService {
     return this.repo.findAttendancesByFilter(dto);
   }
 
+  createAttendance(dto: CreateAttendanceDto) {
+    return this.repo.createAttendance(dto);
+  }
+
   deleteAttendance(attendanceId: number) {
     return this.repo.deleteAttendance(attendanceId);
+  }
+
+  findAllAssignments() {
+    return this.repo.findAllAssignments();
+  }
+
+  findAssignmentByFilter(dto: AssignmentFilterDto) {
+    return this.repo.findAssignmentByFilter(dto);
+  }
+
+  deleteAssigment(assignmentId: number) {
+    return this.repo.deleteAssigment(assignmentId);
+  }
+
+  findAllSubmissions() {
+    return this.repo.findAllSubmissions();
+  }
+
+  findSubmissionByFilter(dto: SubmissionFilterDto) {
+    return this.repo.findSubmissionByFilter(dto);
+  }
+
+  deleteSubmission(submissionId: number) {
+    return this.repo.deleteSubmission(submissionId);
+  }
+
+  updateAttendance(attendanceId: number, dto: UpdateAttendanceDto) {
+    return this.repo.updateAttendance(attendanceId, dto);
+  }
+
+  createAssignment(dto: CreateAssignmentDto) {
+    return this.repo.createAssignment(dto);
+  }
+
+  updateAssignment(assignmentId: number, dto: UpdateAssignmentDto) {
+    return this.repo.updateAssignment(assignmentId, dto);
+  }
+
+  updateSubmissionScore(submissionId: number, dto: UpdateSubmissionScoreDto) {
+    return this.repo.updateSubmissionScore(submissionId, dto);
+  }
+
+  createSubmission(dto: CreateSubmissionDto) {
+    return this.repo.createSubmission(dto);
   }
 }
