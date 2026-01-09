@@ -80,9 +80,29 @@ model Attendance {
 
   teachingAssigmentId Int
   teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
+
+  attendanceSessionId Int
+  attendanceSession AttendanceSession @relation(fields: [attendanceSessionId], references: [id])
+
+  createBy Role
   createdAt           DateTime          @default(now())
 
-  @@unique([studentId, teachingAssigmentId, date])
+  @@unique([studentId, attendanceSessionId])
+}
+
+model AttendanceSession{
+  id Int @id @default(autoincrement())
+
+  teachingAssigmentId Int
+  teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
+
+  openAt DateTime
+  closeAt DateTime
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  attendances Attendance[]
 }
 
 model Assignment {
@@ -112,6 +132,7 @@ model TeachingAssigment {
 
   assignment  Assignment[]
   attendances Attendance[]
+  attendanceSession AttendanceSession[]
 
   @@unique([teacherId, classId, subjectId])
 }
