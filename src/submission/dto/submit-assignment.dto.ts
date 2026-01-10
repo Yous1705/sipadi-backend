@@ -1,9 +1,6 @@
 import { IsInt, IsString, IsUrl } from 'class-validator';
 
-export class CreateSubmissionDto {
-  @IsInt()
-  studentId: number;
-
+export class SubmitAssignmentDto {
   @IsInt()
   assignmentId: number;
 

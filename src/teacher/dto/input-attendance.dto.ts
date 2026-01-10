@@ -1,4 +1,4 @@
-import { AttendanceStatus } from '@prisma/client';
+import { AttendanceStatus, Role } from '@prisma/client';
 import {
   IsDateString,
   IsEnum,
@@ -24,4 +24,10 @@ export class InputAttendanceByTeacherDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  @IsInt()
+  attendanceSessionId: number;
+
+  @IsEnum(Role)
+  createBy: Role;
 }

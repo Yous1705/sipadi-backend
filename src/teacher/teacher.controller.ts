@@ -19,80 +19,78 @@ import { UpdateAssignmentByTeacherDto } from './dto/update-assignment.dto';
 import { InputAttendanceByTeacherDto } from './dto/input-attendance.dto';
 import { UpdateInputAttendanceByTeacherDto } from './dto/update-input-attendance.dto';
 import { GradeSubmissionDto } from './dto/create-grade-submission.dto';
+import { AssignmentService } from 'src/assignment/assignment.service';
+import { CreateAssignmentDto } from 'src/assignment/dto/create-assignment.dto';
+import { UpdateAssignmentDto } from 'src/assignment/dto/update-assignment.dto';
+import { AttendanceSessionService } from 'src/attendance-session/attendance-session.service';
+import { OpenAttendanceSessionDto } from 'src/attendance-session/dto/open-session.dto';
 
 @Controller('teacher')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.TEACHER)
 export class TeacherController {
-  constructor(private readonly teacherService: TeacherService) {}
+  constructor(
+    private readonly assignmentService: AssignmentService,
+    private readonly teacherService: TeacherService,
+    private readonly attendanceSessionService: AttendanceSessionService,
+  ) {}
 
-  @Get('my-teaching')
-  findMyTeachingAssignments(@Req() req) {
-    return this.teacherService.findMyTeachingAssignments(req.user.sub);
-  }
-
-  @Post('create-assignment')
-  createAssignment(@Req() req, @Body() dto: CreateAssignmentByTeacherDto) {
-    return this.teacherService.createAssignmet(req.user.sub, dto);
+  @Post('assignment')
+  createAssignment(@Body() dto: CreateAssignmentDto, @Req() req) {
+    return this.assignmentService.create(dto, req.user.sub);
   }
 
   @Patch('assignment/:id')
   updateAssignment(
-    @Req() req,
     @Param('id') id: number,
-    @Body() dto: UpdateAssignmentByTeacherDto,
+    @Body() dto: UpdateAssignmentDto,
+    @Req() req,
   ) {
-    return this.teacherService.updateAssignment(req.user.sub, +id, dto);
+    return this.assignmentService.update(id, dto, req.user.sub);
   }
 
   @Delete('assignment/:id')
-  deleteAssignment(@Req() req, @Param('id') id: number) {
-    return this.teacherService.deleteAssignment(req.user.sub, +id);
+  deleteAssignment(@Param('id') id: number, @Req() req) {
+    return this.assignmentService.delete(id, req.user.sub);
   }
 
-  @Post('attendance')
-  inputAttendance(@Req() req, @Body() dto: InputAttendanceByTeacherDto) {
-    return this.teacherService.inputAttendance(req.user.sub, dto);
+  @Get('teachings')
+  getMyTeaching(@Req() req) {
+    return this.teacherService.getMyTeaching(req.user.sub);
   }
 
-  @Patch('attendance/:id')
-  updateAttendance(
-    @Req() req,
-    @Param('id') id: number,
-    @Body() dto: UpdateInputAttendanceByTeacherDto,
-  ) {
-    return this.teacherService.updateAttendance(req.user.sub, +id, dto);
+  @Get('teachings/:id/students')
+  getStudents(@Param('id') Id: number, @Req() req) {
+    return this.teacherService.getStudents(Id, req.user.sub);
+  }
+
+  @Get('teachings/:id/assignment')
+  getAssignment(@Param('id') Id: number, @Req() req) {
+    return this.teacherService.getAssignment(Id, req.user.sub);
   }
 
   @Get('assignments/:id/submissions')
-  findSubmission(@Req() req, @Param('id') id: number) {
-    return this.teacherService.findSubmission(req.user.sub, +id);
+  getSubmission(@Param('id') Id: number, @Req() req) {
+    return this.teacherService.getSubmission(Id, req.user.sub);
   }
 
-  @Patch('assignments/:id/grade')
-  gradeSubmission(
-    @Req() req,
-    @Param('id') id: number,
-    dto: GradeSubmissionDto,
-  ) {
-    return this.teacherService.gradeSubmission(req.user.sub, +id, dto);
+  @Post('attendance-session')
+  openSession(@Body() dto: OpenAttendanceSessionDto) {
+    return this.attendanceSessionService.open(dto);
   }
 
-  @Get('my-students/:id')
-  findStudentByTeachingAssignment(@Req() req, @Param('id') id: number) {
-    return this.teacherService.findStudentByTeachingAssignment(
-      req.user.sub,
-      +id,
-    );
+  @Patch('attendance-session/:id/close')
+  closeSession(@Param('id') id: number, @Req() req) {
+    return this.attendanceSessionService.close(id, req.user.sub);
   }
 
-  @Get('student-attendance')
-  findAttendance(@Req() req, @Param('id') id: number) {
-    return this.teacherService.findAttendance(req.user.sub, +id);
+  @Get('attendance-session/teaching/:id')
+  listSession(@Param('id') id: number) {
+    return this.attendanceSessionService.listByTeaching(id);
   }
 
-  @Get('assigment-detail/:id')
-  getAssignmentDetail(@Req() req, @Param('id') id: number) {
-    return this.teacherService.getAssignmentDetail(req.user.sub, +id);
+  @Get('attendance-sessions/:id')
+  sessionDetail(@Param('id') id: number) {
+    return this.attendanceSessionService.detail(id);
   }
 }

@@ -12,10 +12,7 @@ export class CreateAttendanceDto {
   studentId: number;
 
   @IsInt()
-  teachingAssigmentId: number;
-
-  @IsDateString()
-  date: Date;
+  attendanceSessionId: number;
 
   @IsEnum(AttendanceStatus)
   status: AttendanceStatus;

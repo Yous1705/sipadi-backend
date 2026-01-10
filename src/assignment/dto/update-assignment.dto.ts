@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateAssignmentDto } from './create-assignmnet.dto';
+import { CreateAssignmentDto } from '../../assignment/dto/create-assignment.dto';
 
 export class UpdateAssignmentDto extends PartialType(CreateAssignmentDto) {}

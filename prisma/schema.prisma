@@ -35,6 +35,9 @@ model User {
   role     Role
   isActive Boolean @default(true)
 
+  attendances Attendance[] @relation("AttendanceStudent")
+  createdAttendances Attendance[] @relation("AttendanceCreatedby")
+
   homeroomClasses Class[]  @relation("HomeroomTeacher")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -43,7 +46,6 @@ model User {
   class   Class? @relation("StudentClass", fields: [classId], references: [id])
 
   teachingAssigment TeachingAssigment[]
-  attendances       Attendance[]
   submissions       Submission[]
 }
 
@@ -71,12 +73,12 @@ model Subject {
 
 model Attendance {
   id     Int              @id @default(autoincrement())
-  date   DateTime
+
   status AttendanceStatus
   note   String?
 
   studentId Int
-  student   User @relation(fields: [studentId], references: [id])
+  student   User @relation("AttendanceStudent",fields: [studentId], references: [id])
 
   teachingAssigmentId Int
   teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
@@ -84,7 +86,9 @@ model Attendance {
   attendanceSessionId Int
   attendanceSession AttendanceSession @relation(fields: [attendanceSessionId], references: [id])
 
-  createBy Role
+  createById Int
+  createdBy User @relation("AttendanceCreatedby",fields: [createById], references: [id])
+
   createdAt           DateTime          @default(now())
 
   @@unique([studentId, attendanceSessionId])
