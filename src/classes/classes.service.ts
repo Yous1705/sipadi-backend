@@ -3,7 +3,6 @@ import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { ClassesRepository } from './classes.repository';
 import { AssignHomeroomTeacherDto } from './dto/assign-homeroom-teacher.dto';
-
 import { Role } from '@prisma/client';
 import { MoveStudentDto } from './dto/move-student.dto';
 import { UserRepository } from 'src/user/user.repository';
@@ -100,5 +99,16 @@ export class ClassesService {
     });
 
     return this.repo.deactivate(classId);
+  }
+
+  findAll() {
+    return this.repo.findAll();
+  }
+
+  findById(id: number) {
+    return this.repo.findById(id);
+  }
+  findByNameAndYear(name: string, year: number) {
+    return this.repo.findByNameAndYear(name, year);
   }
 }

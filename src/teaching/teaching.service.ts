@@ -7,6 +7,8 @@ import { ClassesRepository } from 'src/classes/classes.repository';
 import { AssignTeacherDto } from './dto/assign-teacher.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Role } from '@prisma/client';
+import { CreateSubjectDto } from './dto/create-subject.dto';
+import { UpdateSubjectDto } from './dto/update-subject.dto';
 
 @Injectable()
 export class TeachingService {
@@ -38,7 +40,7 @@ export class TeachingService {
 
     const exist = await this.repo.findExisting(
       dto.classId,
-      dto.classId,
+      dto.teacherId,
       dto.subjectId,
     );
 
@@ -61,5 +63,30 @@ export class TeachingService {
     }
 
     return this.repo.delete(teachingAssigmentId);
+  }
+
+  findAll() {
+    return this.repo.findAll();
+  }
+
+  createSubject(dto: CreateSubjectDto) {
+    return this.prisma.subject.create({
+      data: {
+        name: dto.name,
+      },
+    });
+  }
+
+  updateSubject(id: number, dto: UpdateSubjectDto) {
+    return this.prisma.subject.update({
+      where: { id },
+      data: {
+        name: dto.name,
+      },
+    });
+  }
+
+  findAllSubject() {
+    return this.prisma.subject.findMany();
   }
 }

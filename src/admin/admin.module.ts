@@ -7,6 +7,7 @@ import { AttendanceModule } from 'src/attendance/attendance.module';
 import { TeachingModule } from 'src/teaching/teaching.module';
 import { ClassesModule } from 'src/classes/classes.module';
 import { AttendanceSessionModule } from 'src/attendance-session/attendance-session.module';
+import { AssignmentModule } from 'src/assignment/assignment.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AttendanceSessionModule } from 'src/attendance-session/attendance-sessi
     TeachingModule,
     ClassesModule,
     AttendanceSessionModule,
+    AssignmentModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

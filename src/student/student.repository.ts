@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { AssignmentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -40,6 +40,8 @@ export class StudentRepository {
         teachingAssigment: {
           classId,
         },
+        status: AssignmentStatus.PUBLISHED,
+        deletedAt: null,
       },
       include: {
         submissions: {
@@ -71,6 +73,37 @@ export class StudentRepository {
       },
       include: {
         teachingAssigment: true,
+      },
+    });
+  }
+
+  findAssignmentDetail(assignmentId: number, studentId: number) {
+    return this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: {
+        teachingAssigment: {
+          include: {
+            subject: {
+              select: { id: true, name: true },
+            },
+            teacher: {
+              select: { id: true, name: true },
+            },
+            class: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+        submissions: {
+          where: { studentId },
+          select: {
+            id: true,
+            score: true,
+            feedback: true,
+            submittedAt: true,
+            fileUrl: true,
+          },
+        },
       },
     });
   }

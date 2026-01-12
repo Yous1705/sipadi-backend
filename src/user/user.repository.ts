@@ -9,7 +9,7 @@ export class UserRepository {
   findById(id: number) {
     return this.prisma.user.findUnique({
       where: {
-        id,
+        id: id,
       },
     });
   }
@@ -29,6 +29,21 @@ export class UserRepository {
         email,
       },
     });
+  }
+
+  findByClass(classId: number) {
+    return this.prisma.user.findMany({
+      where: {
+        classId,
+      },
+      select: {
+        name: true,
+      },
+    });
+  }
+
+  findAll() {
+    return this.prisma.user.findMany();
   }
 
   create(data: Prisma.UserCreateInput) {

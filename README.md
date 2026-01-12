@@ -1,98 +1,302 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Sipadi Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 🔧 Project Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Sipadi Backend** is a RESTful API built with NestJS and Prisma for managing school operations (users, students, teachers, classes, assignments, attendance, and submissions). This repository provides authentication using JWT, role-based access control (ADMIN / TEACHER / STUDENT), and a set of endpoints for admin, teacher, and student workflows.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Features
 
-## Project setup
+- JWT authentication and role-based access control
+- Student, Teacher, and Admin management
+- Classes and teaching assignments
+- Assignment creation, submission, grading
+- Attendance sessions and attendance tracking
+- Built using NestJS, Prisma (Postgres/MySQL/SQLite), and TypeScript
 
-```bash
-$ pnpm install
+---
+
+## 🧰 Tech Stack
+
+- Node.js + TypeScript
+- NestJS
+- Prisma (ORM)
+- PostgreSQL / MySQL / SQLite (via Prisma)
+- Jest for testing
+
+---
+
+## ⚙️ Prerequisites
+
+- Node.js 18+ (or the version you use in the project)
+- pnpm / npm / yarn
+- A database (Postgres, MySQL, SQLite, etc.)
+
+---
+
+## 📝 Environment Variables
+
+Create a `.env` in the root and set at least:
+
+```env
+DATABASE_URL="postgresql://user:pass@localhost:5432/dbname"
+JWT_SECRET_KEY="your_jwt_secret"
+PORT=3000
 ```
 
-## Compile and run the project
+Notes:
+
+- `DATABASE_URL` is used by Prisma.
+- `JWT_SECRET_KEY` is used for signing JWT tokens.
+
+---
+
+## 🔁 Install & Run
+
+1. Install dependencies:
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
+# or
+npm install
 ```
 
-## Run tests
+2. Run database migrations (example with Prisma):
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+npx prisma migrate deploy
+# or for development
+npx prisma migrate dev --name init
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+3. Build & start the server:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm start:dev
+# or
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The app runs on `http://localhost:3000` (or `process.env.PORT`).
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## ✅ Useful Scripts
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- Start dev server: `pnpm start:dev`
+- Build: `pnpm build`
+- Start production: `pnpm start:prod`
+- Tests: `pnpm test`
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 📂 Project Structure
 
-## Stay in touch
+Top-level important folders/files:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+src/
+  auth/                # Authentication (login, guards)
+  admin/               # Admin controllers and logic
+  teacher/             # Teacher endpoints and logic
+  student/             # Student endpoints and logic
+  assignment/          # Assignment domain logic
+  submission/          # Submission and grading
+  attendance/          # Attendance handling
+  attendance-session/  # Attendance session management
+  classes/             # Class management
+  teaching/            # Teaching assignment logic
+  prisma/              # Prisma service & module
+  app.module.ts
+  main.ts
+prisma/
+  schema.prisma
+package.json
+README.md
+```
 
-## License
+> The controllers define the HTTP routes and role restrictions.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+## 🔐 Authentication
+
+This API uses **JWT**. After you log in, you'll receive an access token:
+
+```json
+{ "access_token": "<JWT_TOKEN>" }
+```
+
+Use the token in `Authorization: Bearer <token>` header for protected routes.
+
+---
+
+## 📡 API Endpoints (Overview & Examples)
+
+Base URL: `http://localhost:3000`
+
+Note: endpoints below show the path, brief description, and an example curl request. Replace `<TOKEN>` with a valid JWT.
+
+### Auth
+
+- POST /auth/login — Login and receive JWT
+
+Example:
+
+```bash
+curl -s -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"secret"}'
+```
+
+Response:
+
+```json
+{ "access_token": "..." }
+```
+
+- POST /auth/register-admin — Register an admin
+
+```bash
+curl -s -X POST http://localhost:3000/auth/register-admin \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Admin","email":"admin@example.com","password":"secret"}'
+```
+
+### Admin (Requires ADMIN role)
+
+- POST /admin/students — Create student
+
+```bash
+curl -X POST http://localhost:3000/admin/students \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"name":"Student A","email":"student@example.com","password":"secret","classId":1}'
+```
+
+- POST /admin/teachers — Create teacher
+
+```bash
+curl -X POST http://localhost:3000/admin/teachers \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"name":"Teacher A","email":"teacher@example.com","password":"secret"}'
+```
+
+- GET /admin/users — List all users
+
+```bash
+curl -X GET http://localhost:3000/admin/users \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+- Classes endpoints: GET /admin/classes, POST /admin/classes, PATCH /admin/classes/:id, DELETE /admin/classes/:id
+
+Example create class:
+
+```bash
+curl -X POST http://localhost:3000/admin/classes \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"name":"Class A","year":2025}'
+```
+
+- Attendance session management (admin):
+  - POST /admin/attendance-session
+  - PATCH /admin/attendance-session/:id/close
+  - PATCH /admin/attendance-session/:id/force-close
+
+### Teacher (Requires TEACHER role)
+
+- POST /teacher/assignment — Create an assignment
+
+```bash
+curl -X POST http://localhost:3000/teacher/assignment \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"title":"Assignment 1","description":"Write an essay","dueDate":"2026-02-01T00:00:00.000Z","teachingAssigmentId":1}'
+```
+
+- PATCH /teacher/assignments/:id/publish — Publish assignment
+- PATCH /teacher/assignments/:id/close — Close assignment
+- GET /teacher/assignments — List teacher's assignments
+- PATCH /teacher/submission/:id/grade — Grade a submission
+
+- Attendance session (teacher):
+  - POST /teacher/attendance-session — open a session
+  - PATCH /teacher/attendance-session/:id/close — close a session
+  - GET /teacher/attendance-session/:id — get session details
+  - GET /teacher/attendance-session/:id/attendances — list attendances for session
+  - PATCH /teacher/attendances/:id — update attendance
+  - POST /teacher/attendances/bulk — create attendance in bulk
+
+### Student (Requires STUDENT role)
+
+- POST /student/assignments/submission — Submit an assignment
+
+```bash
+curl -X POST http://localhost:3000/student/assignments/submission \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"assignmentId":5,"fileUrl":"https://example.com/submission.pdf"}'
+```
+
+- GET /student/dashboard — Get student's dashboard
+- GET /student/assignments — List assignments for student
+- GET /student/assignments/:id — Get assignment detail
+- GET /student/attendances — Get student's attendances
+- POST /student/attendance/session — Attend session (based on session DTO)
+- POST /student/attendance — Mark attendance (student)
+
+---
+
+## 📌 Validation & DTOs
+
+This project uses class-validator for DTO validation. Requests that do not satisfy DTO constraints will return 400 with relevant validation messages.
+
+---
+
+## 🧪 Testing
+
+Run tests with:
+
+```bash
+pnpm test
+# or
+npm test
+```
+
+End-to-end tests are available with `pnpm test:e2e`.
+
+---
+
+## 💡 Tips & Notes
+
+- Use a Postman or HTTP client to manage tokens and test protected endpoints quickly.
+- Ensure your `JWT_SECRET_KEY` is set before starting the app to avoid runtime errors.
+- Prisma migrations and seeding are managed via `npx prisma` commands — adapt to your DB provider.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome — open an issue or a pull request with a clear description, tests, and any migration steps.
+
+---
+
+## 📄 License
+
+This project is marked as UNLICENSED in `package.json`. Update as necessary.
+
+---
+
+If you'd like, I can also:
+
+- Add Postman collection examples
+- Create example .env.sample
+- Add more detailed request/response examples for each endpoint
+
+---
+
+Happy hacking! 👩‍💻👨‍💻

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { OpenAttendanceSessionDto } from './dto/open-session.dto';
 import { AttendanceSessionRepository } from './attendance-session.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AttendanceStatus } from '@prisma/client';
 
 @Injectable()
 export class AttendanceSessionService {
@@ -27,6 +28,17 @@ export class AttendanceSessionService {
       throw new BadRequestException('Teaching assignment not found');
     }
 
+    const activeSession = await this.prisma.attendanceSession.findFirst({
+      where: {
+        teachingAssigmentId: dto.teachingAssigmentId,
+        isActive: true,
+      },
+    });
+
+    if (activeSession) {
+      throw new BadRequestException('Session already active');
+    }
+
     return this.repo.create({
       teachingAssigmentId: dto.teachingAssigmentId,
       openAt,
@@ -40,24 +52,37 @@ export class AttendanceSessionService {
       throw new BadRequestException('Session not found or closed');
     }
 
-    const attendIds = session.attendances.map((a) => a.id);
+    const attendedStudentIds = session.attendances.map((a) => a.studentId);
 
     const alphaStudents = session.teachingAssigment.class.students.filter(
-      (s) => !attendIds.includes(s.id),
+      (s) => !attendedStudentIds.includes(s.id),
     );
 
-    if (alphaStudents.length > 0) {
-      await this.repo.createAlphaAttendance(
-        alphaStudents.map((s) => ({
-          studentId: s.id,
-          attendaceSessionId: session.id,
-          teachingAssigmentId: session.teachingAssigmentId,
-          createdbyId: closedById,
-        })),
-      );
-    }
+    await this.prisma.$transaction(async (tx) => {
+      if (alphaStudents.length > 0) {
+        await tx.attendance.createMany({
+          data: alphaStudents.map((s) => ({
+            studentId: s.id,
+            attendanceSessionId: session.id,
+            teachingAssigmentId: session.teachingAssigmentId,
+            status: AttendanceStatus.ALPHA,
+            createById: closedById,
+          })),
+          skipDuplicates: true,
+        });
+      }
 
-    return this.repo.close(sessionId);
+      await tx.attendanceSession.update({
+        where: { id: sessionId },
+        data: { isActive: false },
+      });
+    });
+
+    return { success: true };
+  }
+
+  listAll(filter?: { classId: number; teacherId: number; subjectId: number }) {
+    return this.repo.findAll(filter);
   }
 
   listByTeaching(teachingAssigmentId: number) {
@@ -66,5 +91,15 @@ export class AttendanceSessionService {
 
   detail(sessionId: number) {
     return this.repo.findDetail(sessionId);
+  }
+
+  async forceClose(sessionId: number) {
+    const session = await this.repo.findById(sessionId);
+
+    if (!session || !session.isActive) {
+      throw new BadRequestException('Session not found or closed');
+    }
+
+    return this.repo.close(sessionId);
   }
 }

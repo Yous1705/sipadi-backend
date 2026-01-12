@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { AssignmentStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -8,12 +8,13 @@ export class AssignmentRepository {
 
   findById(id: number) {
     return this.prisma.assignment.findUnique({
-      where: {
-        id,
-      },
+      where: { id, deletedAt: null },
       include: {
         teachingAssigment: {
           include: {
+            class: {
+              select: { id: true },
+            },
             teacher: true,
           },
         },
@@ -34,11 +35,19 @@ export class AssignmentRepository {
     });
   }
 
-  delete(id: number) {
-    return this.prisma.assignment.delete({
-      where: {
-        id,
+  softDelete(id: number) {
+    return this.prisma.assignment.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        status: AssignmentStatus.CLOSED,
       },
+    });
+  }
+
+  findMyAssignments(teacherId: number) {
+    return this.prisma.assignment.findMany({
+      where: { deletedAt: null, teachingAssigment: { teacherId } },
     });
   }
 }

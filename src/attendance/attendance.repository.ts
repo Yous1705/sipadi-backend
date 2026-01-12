@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AttendanceStatus } from '@prisma/client';
+import { AttendanceStatus, Role } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -18,7 +18,15 @@ export class AttendanceRepository {
       include: {
         teachingAssigment: {
           include: {
-            class: true,
+            class: {
+              include: {
+                students: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -34,9 +42,6 @@ export class AttendanceRepository {
     });
   }
 
-  //   ============================
-  //       ATTENDANCE
-  //   ============================
   findAttendance(studentId: number, sessionId: number) {
     return this.prisma.attendance.findUnique({
       where: {
@@ -71,6 +76,85 @@ export class AttendanceRepository {
         id,
       },
       data,
+    });
+  }
+  findAll(filter?: {
+    studentId?: number;
+    classId?: number;
+    teacherId?: number;
+    subjectId?: number;
+  }) {
+    return this.prisma.attendance.findMany({
+      where: {
+        studentId: filter?.studentId,
+        teachingAssigment: {
+          classId: filter?.classId,
+          teacherId: filter?.teacherId,
+          subjectId: filter?.subjectId,
+        },
+      },
+      include: {
+        student: true,
+        teachingAssigment: {
+          include: {
+            class: true,
+            subject: true,
+            teacher: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  findBySession(sessionId: number) {
+    return this.prisma.attendance.findMany({
+      where: {
+        attendanceSessionId: sessionId,
+      },
+      include: {
+        student: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  findById(id: number) {
+    return this.prisma.attendance.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        student: true,
+        teachingAssigment: {
+          include: {
+            class: true,
+            subject: true,
+            teacher: true,
+          },
+        },
+      },
+    });
+  }
+
+  bulkCreateAttendance(data) {
+    return this.prisma.attendance.createMany({
+      data,
+      skipDuplicates: true,
+    });
+  }
+
+  findStudentByClass(classId: number) {
+    return this.prisma.user.findMany({
+      where: {
+        role: Role.STUDENT,
+        classId,
+        isActive: true,
+      },
     });
   }
 }

@@ -14,6 +14,20 @@ export class TeachingRepository {
     });
   }
 
+  findAll() {
+    return this.prisma.teachingAssigment.findMany({
+      include: {
+        teacher: true,
+        class: true,
+        subject: true,
+      },
+    });
+  }
+
+  findAllSubject() {
+    return this.prisma.subject.findMany();
+  }
+
   findExisting(teacherId: number, classId: number, subjectId: number) {
     return this.prisma.teachingAssigment.findFirst({
       where: {

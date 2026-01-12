@@ -17,6 +17,30 @@ export class AttendanceSessionRepository {
     });
   }
 
+  findAll(filter?: { classId: number; teacherId: number; subjectId: number }) {
+    return this.prisma.attendanceSession.findMany({
+      where: {
+        teachingAssigment: {
+          classId: filter?.classId,
+          teacherId: filter?.teacherId,
+          subjectId: filter?.subjectId,
+        },
+      },
+      include: {
+        teachingAssigment: {
+          include: {
+            class: true,
+            subject: true,
+            teacher: true,
+          },
+        },
+      },
+      orderBy: {
+        openAt: 'desc',
+      },
+    });
+  }
+
   findById(sessionId: number) {
     return this.prisma.attendanceSession.findUnique({
       where: {

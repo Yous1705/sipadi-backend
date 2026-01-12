@@ -1,4 +1,14 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateAttendanceDto } from './create-attendance.dto';
+import { AttendanceStatus } from '@prisma/client';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-export class UpdateAttendanceDto extends PartialType(CreateAttendanceDto) {}
+export class UpdateAttendanceDto {
+  @IsOptional()
+  @IsEnum(AttendanceStatus)
+  status?: AttendanceStatus;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
+}

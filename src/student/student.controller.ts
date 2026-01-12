@@ -1,14 +1,13 @@
-import { AssignmentService } from './../assignment/assignment.service';
 import {
   Controller,
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   Req,
   UseGuards,
+  ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { SubmissionService } from 'src/submission/submission.service';
@@ -17,7 +16,9 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { Role } from '@prisma/client';
-import { AttendSessionDto } from './dto/attend-session.dto';
+import { AttendSessionDto } from '../attendance/dto/attend-session.dto';
+import { StudentAttendanceDto } from 'src/attendance/dto/student-attendance.dto';
+import { AttendanceService } from 'src/attendance/attendance.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.STUDENT)
@@ -26,12 +27,20 @@ export class StudentController {
   constructor(
     private readonly submissionService: SubmissionService,
     private readonly studentService: StudentService,
+    private readonly attendanceService: AttendanceService,
   ) {}
 
-  @Post('submission')
+  // ============== ASSIGNMENT ==============
+
+  @Post('assignments/submission')
   submitAssignment(@Body() dto: SubmitAssignmentDto, @Req() req) {
     return this.submissionService.submit(dto, req.user.sub);
   }
+
+  // @Put('assignments/submission')
+  // updateSubmission(@Body() dto: SubmitAssignmentDto, @Req() req) {
+  //   return this.submissionService.submit(dto, req.user.sub);
+  // }
 
   @Get('dashboard')
   getDashboard(@Req() req) {
@@ -43,9 +52,9 @@ export class StudentController {
     return this.studentService.getAssignments(req.user.sub);
   }
 
-  @Post('assignments/:id/submit')
-  submitAssignments(@Param('id') id: number, @Body() dto: SubmitAssignmentDto) {
-    return this.studentService.submitAssignments(id, dto);
+  @Get('assignments/:id')
+  getAssignmentDetail(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.studentService.getAssignmentsDetail(req.user.sub, id);
   }
 
   @Get('attendances')
@@ -53,8 +62,13 @@ export class StudentController {
     return this.studentService.getMyAttendances(req.user.sub);
   }
 
-  @Post('attend')
+  @Post('attendance/session')
   attendSessions(@Req() req, @Body() dto: AttendSessionDto) {
     return this.studentService.attendSession(req.user.sub, dto);
+  }
+
+  @Post('attendance')
+  attend(@Body() dto: StudentAttendanceDto, @Req() req) {
+    return this.attendanceService.studentAttend(dto, req.user.sub);
   }
 }

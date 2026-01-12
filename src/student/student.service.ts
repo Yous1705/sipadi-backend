@@ -3,7 +3,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { AttendSessionDto } from './dto/attend-session.dto';
+import { AttendSessionDto } from '../attendance/dto/attend-session.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentRepository } from './student.repository';
 import { AttendanceStatus } from '@prisma/client';
@@ -27,6 +27,25 @@ export class StudentService {
     return this.repo.findAssignmentsByClass(classId, studentId);
   }
 
+  async getAssignmentsDetail(studentId: number, assignmentId: number) {
+    const classId = await this.getClassId(studentId);
+
+    const assignment = await this.repo.findAssignmentDetail(
+      assignmentId,
+      studentId,
+    );
+
+    if (!assignment) {
+      throw new BadRequestException('Assignment not found');
+    }
+
+    if (assignment.teachingAssigment.classId !== classId) {
+      throw new ForbiddenException('Not your class assignment');
+    }
+
+    return assignment;
+  }
+
   async getDashboard(studentId: number) {
     const classId = await this.getClassId(studentId);
 
@@ -36,38 +55,6 @@ export class StudentService {
     ]);
 
     return { assignments, attendanceSession };
-  }
-
-  async submitAssignments(
-    studentId: number,
-    data: { assignmentId: number; fileUrl: string },
-  ) {
-    const assignment = await this.repo.findAssignmentById(data.assignmentId);
-
-    if (!assignment) {
-      throw new BadRequestException('Assignment not found');
-    }
-
-    const student = await this.repo.findStudentById(studentId);
-    if (student?.classId !== assignment.teachingAssigment.classId) {
-      throw new ForbiddenException('Student not in this class');
-    }
-
-    if (assignment.dueDate < new Date()) {
-      throw new BadRequestException('Assignment already closed');
-    }
-
-    const exist = await this.repo.findSubmission(studentId, data.assignmentId);
-
-    if (exist) {
-      throw new BadRequestException('Submission already exist');
-    }
-
-    return this.repo.createSubmission({
-      studentId: studentId,
-      assignmentId: data.assignmentId,
-      fileUrl: data.fileUrl,
-    });
   }
 
   async getMyAttendances(studentId: number) {

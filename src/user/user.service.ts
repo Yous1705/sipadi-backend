@@ -140,4 +140,24 @@ export class UserService {
 
     return user;
   }
+
+  findByEmail(email: string) {
+    return this.repo.findByEmail(email);
+  }
+
+  findById(id: number) {
+    return this.repo.findById(id);
+  }
+
+  findByClass(classId: number) {
+    return this.repo.findByClass(classId);
+  }
+
+  findAll() {
+    return this.repo.findAll();
+  }
+
+  findAllByRole(role: Role) {
+    return this.repo.findAllByRole(role);
+  }
 }

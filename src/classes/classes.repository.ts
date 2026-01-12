@@ -13,6 +13,13 @@ export class ClassesRepository {
       where: {
         id,
       },
+      include: {
+        homeroomTeacher: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
   }
 
@@ -72,5 +79,9 @@ export class ClassesRepository {
         disconnect: true,
       },
     });
+  }
+
+  findAll() {
+    return this.prisma.class.findMany();
   }
 }

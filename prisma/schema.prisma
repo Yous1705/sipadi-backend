@@ -27,6 +27,12 @@ enum AttendanceStatus {
   ALPHA
 }
 
+enum AssignmentStatus{
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
 model User {
   id       Int    @id @default(autoincrement())
   name     String
@@ -37,6 +43,7 @@ model User {
 
   attendances Attendance[] @relation("AttendanceStudent")
   createdAttendances Attendance[] @relation("AttendanceCreatedby")
+  gradedSubmissions Submission[] @relation("SubmissionGradedBy")
 
   homeroomClasses Class[]  @relation("HomeroomTeacher")
   createdAt       DateTime @default(now())
@@ -114,11 +121,15 @@ model Assignment {
   title       String
   description String?
   dueDate     DateTime
+  status AssignmentStatus @default(DRAFT)
+  deletedAt DateTime?
 
   teachingAssigmentId Int
   teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
+
   submissions         Submission[]
   createdAt           DateTime          @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TeachingAssigment {
@@ -153,6 +164,9 @@ model Submission {
 
   studentId Int
   student   User @relation(fields: [studentId], references: [id])
+
+  gradedById Int?
+  gradedBy User? @relation("SubmissionGradedBy", fields: [gradedById], references:[id])
 
   submittedAt DateTime @default(now())
   @@unique([studentId, assignmentId])
