@@ -76,28 +76,6 @@ Relationships:
 - pnpm (or npm/yarn)
 - PostgreSQL database server
 
-### Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/sipadi_db"
-JWT_SECRET_KEY="your_secure_jwt_secret_key"
-PORT=3000
-```
-
-### Database Setup
-
-1. Ensure PostgreSQL is running and create a database.
-2. Run Prisma migrations:
-   ```bash
-   npx prisma migrate deploy
-   ```
-3. (Optional) Seed the database if needed:
-   ```bash
-   npx prisma db seed
-   ```
-
 ### Run Commands
 
 1. Install dependencies:
@@ -181,4 +159,4 @@ Custom exceptions like `ForbiddenException` are used for business logic violatio
 
 ## Author
 
-[Your Name or Team Name]
+[Yous Markus Syalom Sibarani]
