@@ -19,7 +19,7 @@ export class SubmissionRepository {
     return this.prisma.submission.create({ data });
   }
 
-  upsertSubmission(studentId: number, assignmentId: number, fileUrl: string) {
+  upsertSubmission(assignmentId: number, fileUrl: string, studentId: number) {
     return this.prisma.submission.upsert({
       where: {
         studentId_assignmentId: {
@@ -53,6 +53,30 @@ export class SubmissionRepository {
         score: data.score,
         feedback: data.feedback,
         gradedById: teacherId,
+      },
+    });
+  }
+
+  resetGrade(submissionId: number) {
+    return this.prisma.submission.update({
+      where: { id: submissionId },
+      data: {
+        score: null,
+        feedback: null,
+        gradedById: null,
+      },
+    });
+  }
+
+  findSubmission(submissionId: number) {
+    return this.prisma.submission.findUnique({
+      where: { id: submissionId },
+      include: {
+        assignment: {
+          include: {
+            teachingAssigment: true,
+          },
+        },
       },
     });
   }

@@ -7,6 +7,7 @@ import { AssignmentModule } from 'src/assignment/assignment.module';
 import { AttendanceSessionModule } from 'src/attendance-session/attendance-session.module';
 import { AttendanceModule } from 'src/attendance/attendance.module';
 import { SubmissionModule } from 'src/submission/submission.module';
+import { ReportModule } from 'src/report/report.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { SubmissionModule } from 'src/submission/submission.module';
     AttendanceSessionModule,
     AttendanceModule,
     SubmissionModule,
+    ReportModule,
   ],
   controllers: [TeacherController],
   providers: [TeacherService, TeacherRepository],

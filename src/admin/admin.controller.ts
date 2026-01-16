@@ -191,7 +191,7 @@ export class AdminController {
 
   @Get('attendance-session/:id')
   getSession(@Param('id') id: number) {
-    return this.attendanceSessionService.detail(id);
+    return this.attendanceSessionService.getDetailWithStudent(id);
   }
 
   @Patch('attendance-session/:id/force-close')

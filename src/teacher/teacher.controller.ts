@@ -9,6 +9,8 @@ import {
   Req,
   UseGuards,
   ParseIntPipe,
+  Query,
+  Res,
 } from '@nestjs/common';
 import { TeacherService } from './teacher.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
@@ -29,6 +31,8 @@ import { AttendanceService } from 'src/attendance/attendance.service';
 import { UpdateAttendanceDto } from 'src/attendance/dto/update-attendance.dto';
 import { BulkAttendanceDto } from 'src/attendance/dto/bulk-attendance.dto';
 import { SubmissionService } from 'src/submission/submission.service';
+import { UpdateAttendanceSessionDto } from 'src/attendance-session/dto/update-attendance.dto';
+import { ReportService } from 'src/report/report.service';
 
 @Controller('teacher')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -40,6 +44,7 @@ export class TeacherController {
     private readonly attendanceSessionService: AttendanceSessionService,
     private readonly attendanceService: AttendanceService,
     private readonly submissionService: SubmissionService,
+    private readonly reportService: ReportService,
   ) {}
 
   // ============= Assignment =============
@@ -54,12 +59,33 @@ export class TeacherController {
     @Body() dto: UpdateAssignmentDto,
     @Req() req,
   ) {
-    return this.assignmentService.update(id, dto, req.user.sub);
+    return this.assignmentService.updateAssignment(id, dto, req.user.sub);
   }
 
   @Get('assignments')
-  findMyAssignments(@Req() req) {
-    return this.assignmentService.findMyAssignments(req.user.sub);
+  findMyAssignments(
+    @Req() req,
+    @Query('teachingAssigmentId') teachingAssigmentId: number,
+  ) {
+    return this.assignmentService.findMyAssignmentsByClass(
+      req.user.sub,
+      teachingAssigmentId,
+    );
+  }
+
+  @Get('assignments/:id')
+  findAssignmentById(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.assignmentService.findAssignmentById(id, req.user.sub);
+  }
+
+  @Delete('assignments/:id')
+  deleteAssignmentById(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.assignmentService.hardDelete(id, req.user.sub);
+  }
+
+  @Get('assignments/:id/detail')
+  getAssignmentDetail(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.assignmentService.getAssignmentDetail(id, req.user.sub);
   }
 
   @Patch('assignments/:id/publish')
@@ -91,6 +117,59 @@ export class TeacherController {
     return this.submissionService.gradeSubmission(id, dto, req.user.sub);
   }
 
+  // ============ Report =============
+  @Get('reports/teaching/:id/grades')
+  getGradeReport(@Param('id', ParseIntPipe) teachingId: number, @Req() req) {
+    return this.reportService.getGradeReport(teachingId, req.user.sub);
+  }
+
+  @Get('reports/teaching/:id/grades/export')
+  async exportGradeReport(
+    @Param('id', ParseIntPipe) teachingId: number,
+    @Query('format') format: 'csv' | 'xlsx',
+    @Req() req,
+    @Res() res,
+  ) {
+    const result = await this.submissionService.exportGradeReport(
+      teachingId,
+      req.user.sub,
+      format ?? 'csv',
+    );
+
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${result.filename}"`,
+    );
+    res.setHeader('Content-Type', result.mimeType);
+
+    res.send(result.content);
+  }
+
+  @Patch('submission/:id/reset-grade')
+  resetGrade(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.submissionService.resetGrade(id, req.user.sub);
+  }
+
+  @Get('reports/class/:id/export')
+  exportClassReport(
+    @Param('id', ParseIntPipe) classId: number,
+    @Query('format') format: 'csv' | 'xlsx',
+    @Req() req,
+    @Res() res,
+  ) {
+    return this.reportService.exportClassReport(
+      classId,
+      req.user.sub,
+      format ?? 'xlsx',
+      res,
+    );
+  }
+
+  @Get('reports/class/:id')
+  getClassReport(@Param('id', ParseIntPipe) classId: number, @Req() req) {
+    return this.reportService.getClassSummaryReport(classId, req.user.sub);
+  }
+
   // =========== TEACHINGS ================
 
   @Get('teachings')
@@ -108,10 +187,20 @@ export class TeacherController {
     return this.teacherService.getAssignment(Id, req.user.sub);
   }
 
+  @Get('homeroom/class')
+  getHomeroomClass(@Req() req) {
+    return this.teacherService.getHomeroomClass(req.user.sub);
+  }
+
   // ============== ATTENDANCE SESSION ==============
   @Post('attendance-session')
   openSession(@Body() dto: OpenAttendanceSessionDto) {
     return this.attendanceSessionService.open(dto);
+  }
+
+  @Delete('attendance-session/:id')
+  deleteSession(@Param('id', ParseIntPipe) id: number) {
+    return this.attendanceSessionService.deleteSession(id);
   }
 
   @Patch('attendance-session/:id/close')
@@ -124,15 +213,29 @@ export class TeacherController {
     return this.attendanceSessionService.listByTeaching(id);
   }
 
-  @Get('attendance-session/:id')
-  sessionDetail(@Param('id', ParseIntPipe) id: number) {
-    return this.attendanceSessionService.detail(id);
+  @Get('attendance-session/:id/detail')
+  getDetailWithStudent(@Param('id', ParseIntPipe) id: number) {
+    return this.attendanceSessionService.getDetailWithStudent(id);
   }
 
   @Get('attendance-session/:id/attendances')
   getSessionAttendances(@Param('id') id: number) {
     return this.attendanceService.listBySession(id);
   }
+
+  @Get('attendance-session/:id')
+  getAttendanceSession(@Param('id', ParseIntPipe) id: number) {
+    return this.attendanceSessionService.getAttendanceSession(id);
+  }
+
+  @Patch('attendance-session/:id')
+  updateAttendanceSession(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateAttendanceSessionDto,
+  ) {
+    return this.attendanceSessionService.updateAttendanceSession(id, dto);
+  }
+
   @Patch('attendances/:id')
   updateAttendance(
     @Param('id', ParseIntPipe) id: number,

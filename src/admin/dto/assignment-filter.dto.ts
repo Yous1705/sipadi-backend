@@ -3,10 +3,6 @@ import { IsInt, IsOptional } from 'class-validator';
 export class AssignmentFilterDto {
   @IsOptional()
   @IsInt()
-  studentId?: number;
-
-  @IsOptional()
-  @IsInt()
   classId?: number;
 
   @IsOptional()

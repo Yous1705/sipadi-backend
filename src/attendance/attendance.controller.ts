@@ -16,4 +16,5 @@ import { CreateAttendanceDto } from './dto/create-attendance.dto';
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
+  
 }

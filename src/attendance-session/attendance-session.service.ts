@@ -1,8 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { OpenAttendanceSessionDto } from './dto/open-session.dto';
 import { AttendanceSessionRepository } from './attendance-session.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AttendanceStatus } from '@prisma/client';
+import { UpdateAttendanceSessionDto } from './dto/update-attendance.dto';
 
 @Injectable()
 export class AttendanceSessionService {
@@ -41,6 +46,7 @@ export class AttendanceSessionService {
 
     return this.repo.create({
       teachingAssigmentId: dto.teachingAssigmentId,
+      name: dto.name,
       openAt,
       closeAt,
     });
@@ -52,31 +58,7 @@ export class AttendanceSessionService {
       throw new BadRequestException('Session not found or closed');
     }
 
-    const attendedStudentIds = session.attendances.map((a) => a.studentId);
-
-    const alphaStudents = session.teachingAssigment.class.students.filter(
-      (s) => !attendedStudentIds.includes(s.id),
-    );
-
-    await this.prisma.$transaction(async (tx) => {
-      if (alphaStudents.length > 0) {
-        await tx.attendance.createMany({
-          data: alphaStudents.map((s) => ({
-            studentId: s.id,
-            attendanceSessionId: session.id,
-            teachingAssigmentId: session.teachingAssigmentId,
-            status: AttendanceStatus.ALPHA,
-            createById: closedById,
-          })),
-          skipDuplicates: true,
-        });
-      }
-
-      await tx.attendanceSession.update({
-        where: { id: sessionId },
-        data: { isActive: false },
-      });
-    });
+    await this.repo.closeWithAlpha(sessionId, closedById);
 
     return { success: true };
   }
@@ -85,12 +67,52 @@ export class AttendanceSessionService {
     return this.repo.findAll(filter);
   }
 
-  listByTeaching(teachingAssigmentId: number) {
+  async listByTeaching(teachingAssigmentId: number) {
+    const session = await this.prisma.attendanceSession.findUnique({
+      where: {
+        id: teachingAssigmentId,
+      },
+    });
+
     return this.repo.findByTeachingAssigment(teachingAssigmentId);
   }
 
-  detail(sessionId: number) {
-    return this.repo.findDetail(sessionId);
+  async getDetailWithStudent(sessionId: number) {
+    const session = await this.repo.getDetailWithStudent(sessionId);
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.isActive && session.closeAt < new Date()) {
+      await this.close(session.id, session.teachingAssigment.teacherId);
+    }
+
+    const students = session.teachingAssigment.class.students.map((student) => {
+      const attendance = session.attendances.find(
+        (a) => a.studentId === student.id,
+      );
+      return {
+        studentId: student.id,
+        name: student.name,
+        attendanceId: attendance?.id ?? null,
+        status: attendance?.status ?? null,
+        note: attendance?.note ?? null,
+      };
+    });
+
+    return {
+      id: session.id,
+      name: session.name,
+      openAt: session.openAt,
+      closeAt: session.closeAt,
+      isActive: session.isActive,
+      teachingAssigmentId: session.teachingAssigmentId,
+      stats: {
+        totalStudents: students.length,
+        attended: session.attendances.length,
+      },
+      students,
+    };
   }
 
   async forceClose(sessionId: number) {
@@ -101,5 +123,81 @@ export class AttendanceSessionService {
     }
 
     return this.repo.close(sessionId);
+  }
+
+  async updateAttendanceSession(id: number, dto: UpdateAttendanceSessionDto) {
+    const session = await this.prisma.attendanceSession.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.isActive && session.closeAt < new Date()) {
+      await this.close(session.id, session.teachingAssigmentId);
+    }
+
+    let isActive = session.isActive;
+    if (dto.closeAt) {
+      const newCloseAt = new Date(dto.closeAt);
+      isActive = newCloseAt > new Date();
+    }
+
+    if (isActive && !session.isActive) {
+      const activeSession = await this.prisma.attendanceSession.findFirst({
+        where: {
+          teachingAssigmentId: session.teachingAssigmentId,
+          isActive: true,
+          id: { not: id },
+        },
+      });
+      if (activeSession) {
+        throw new BadRequestException(
+          'Another session is already active for this teaching assignment',
+        );
+      }
+    }
+
+    return this.repo.update(id, { ...dto, isActive });
+  }
+
+  async getAttendanceSession(teachingAssigmentId: number) {
+    const teaching = await this.prisma.teachingAssigment.findUnique({
+      where: {
+        id: teachingAssigmentId,
+      },
+    });
+
+    if (!teaching) {
+      throw new NotFoundException('Teaching assignment not found');
+    }
+    const active = await this.prisma.attendanceSession.findFirst({
+      where: {
+        id: teachingAssigmentId,
+      },
+    });
+    const session = await this.repo.getAttendanceSession(teachingAssigmentId);
+
+    if (!active) {
+      throw new NotFoundException('Session not found');
+    }
+
+    return session.map((session) => ({
+      id: session.id,
+      name: session.name,
+      isActive: session.isActive,
+      openAt: session.openAt,
+      closeAt: session.closeAt,
+
+      attendedCount: session._count.attendances,
+      totalStudent: session.teachingAssigment.class._count.students,
+      progress: `${session._count.attendances}/${session.teachingAssigment.class._count.students}`,
+    }));
+  }
+
+  deleteSession(id: number) {
+    return this.repo.deleteSession(id);
   }
 }

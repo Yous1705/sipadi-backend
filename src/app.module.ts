@@ -13,9 +13,10 @@ import { AssignmentModule } from './assignment/assignment.module';
 import { SubmissionModule } from './submission/submission.module';
 import { StudentModule } from './student/student.module';
 import { AttendanceSessionModule } from './attendance-session/attendance-session.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, AdminModule, TeacherModule, AttendanceModule, UserModule, ClassesModule, TeachingModule, AssignmentModule, SubmissionModule, StudentModule, AttendanceSessionModule],
+  imports: [PrismaModule, AuthModule, AdminModule, TeacherModule, AttendanceModule, UserModule, ClassesModule, TeachingModule, AssignmentModule, SubmissionModule, StudentModule, AttendanceSessionModule, ReportModule],
   controllers: [AppController],
   providers: [AppService],
 })

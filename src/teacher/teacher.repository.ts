@@ -80,4 +80,24 @@ export class TeacherRepository {
       },
     });
   }
+
+  findHomeroomClass(teacherId: number) {
+    return this.prisma.class.findFirst({
+      where: {
+        homeroomTeacherId: teacherId,
+      },
+      include: {
+        teachingAssigment: {
+          include: {
+            subject: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 }

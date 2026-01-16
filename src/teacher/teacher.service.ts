@@ -47,4 +47,22 @@ export class TeacherService {
   async getSubmission(asignmentId: number, teacherId: number) {
     return this.repo.getSubmission(asignmentId, teacherId);
   }
+
+  async getHomeroomClass(teacherId: number) {
+    const homeroom = await this.repo.findHomeroomClass(teacherId);
+
+    if (!homeroom) {
+      return null;
+    }
+
+    return {
+      classId: homeroom.id,
+      className: homeroom.name,
+      subjects: homeroom.teachingAssigment.map((t) => ({
+        teachingAssigmentId: t.id,
+        subjectId: t.subject.id,
+        subjectName: t.subject.name,
+      })),
+    };
+  }
 }

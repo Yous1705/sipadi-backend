@@ -91,7 +91,7 @@ model Attendance {
   teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
 
   attendanceSessionId Int
-  attendanceSession AttendanceSession @relation(fields: [attendanceSessionId], references: [id])
+  attendanceSession AttendanceSession @relation(fields: [attendanceSessionId], references: [id], onDelete: Cascade)
 
   createById Int
   createdBy User @relation("AttendanceCreatedby",fields: [createById], references: [id])
@@ -107,6 +107,7 @@ model AttendanceSession{
   teachingAssigmentId Int
   teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
 
+  name String?
   openAt DateTime
   closeAt DateTime
   isActive Boolean @default(true)
@@ -160,7 +161,7 @@ model Submission {
   createdAt  DateTime @default(now())
 
   assignmentId Int
-  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
   studentId Int
   student   User @relation(fields: [studentId], references: [id])

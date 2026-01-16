@@ -19,10 +19,6 @@ export class AttendanceService {
     private readonly prisma: PrismaService,
   ) {}
 
-  // ======================
-  //       ATTENDANCE
-  // =======================
-
   async createAttendance(
     dto: CreateAttendanceDto,
     actor: {

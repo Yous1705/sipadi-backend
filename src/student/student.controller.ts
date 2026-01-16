@@ -32,15 +32,17 @@ export class StudentController {
 
   // ============== ASSIGNMENT ==============
 
-  @Post('assignments/submission')
-  submitAssignment(@Body() dto: SubmitAssignmentDto, @Req() req) {
-    return this.submissionService.submit(dto, req.user.sub);
+  @Post('assignments/:id/submission')
+  submitAssignment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SubmitAssignmentDto,
+    @Req() req,
+  ) {
+    console.log('PARAM id:', id);
+    console.log('DTO:', dto);
+    console.log('RAW BODY:', req.body);
+    return this.submissionService.submit(id, dto, req.user.sub);
   }
-
-  // @Put('assignments/submission')
-  // updateSubmission(@Body() dto: SubmitAssignmentDto, @Req() req) {
-  //   return this.submissionService.submit(dto, req.user.sub);
-  // }
 
   @Get('dashboard')
   getDashboard(@Req() req) {
@@ -57,9 +59,19 @@ export class StudentController {
     return this.studentService.getAssignmentsDetail(req.user.sub, id);
   }
 
+  @Get('teaching/:teachingAssignmentId/assignments')
+  getAssignmentsByTeaching(
+    @Param('teachingAssignmentId', ParseIntPipe) id: number,
+    @Req() req,
+  ) {
+    return this.studentService.getAssignmentsByTeaching(req.user.sub, id);
+  }
+
+  // ============= ATTENDANCE ==============
+
   @Get('attendances')
   getAttendances(@Req() req) {
-    return this.studentService.getMyAttendances(req.user.sub);
+    return this.studentService.getMyAttendance(req.user.sub);
   }
 
   @Post('attendance/session')
@@ -67,8 +79,26 @@ export class StudentController {
     return this.studentService.attendSession(req.user.sub, dto);
   }
 
+  @Get('attendance/session/:id')
+  getAttendanceSessionDetail(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req,
+  ) {
+    return this.studentService.getAttendanceSessionDetail(req.user.sub, id);
+  }
+
   @Post('attendance')
   attend(@Body() dto: StudentAttendanceDto, @Req() req) {
     return this.attendanceService.studentAttend(dto, req.user.sub);
+  }
+
+  @Get('my-classes')
+  findMyClasses(@Req() req) {
+    return this.studentService.findMyClasses(req.user.sub);
+  }
+
+  @Get('classes/:classId')
+  getClassDetail(@Req() req, @Param('classId', ParseIntPipe) classId: number) {
+    return this.studentService.getClassDetail(req.user.sub, classId);
   }
 }
