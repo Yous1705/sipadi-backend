@@ -1,302 +1,184 @@
-# Sipadi Backend
+# SIPADI Backend
 
-## 🔧 Project Overview
+## Project Description
 
-**Sipadi Backend** is a RESTful API built with NestJS and Prisma for managing school operations (users, students, teachers, classes, assignments, attendance, and submissions). This repository provides authentication using JWT, role-based access control (ADMIN / TEACHER / STUDENT), and a set of endpoints for admin, teacher, and student workflows.
+SIPADI Backend is a RESTful API designed to manage educational institution operations, including user management, class administration, assignments, submissions, attendance tracking, and reporting. It addresses the need for a centralized system to handle student performance assessment, teacher workflows, and administrative oversight in schools or similar environments.
 
----
+## Tech Stack
 
-## 🚀 Features
+- **Framework**: NestJS (Node.js)
+- **Language**: TypeScript
+- **ORM**: Prisma
+- **Database**: PostgreSQL
+- **Authentication**: JWT (JSON Web Tokens)
+- **Testing**: Jest
+- **Package Manager**: pnpm
 
-- JWT authentication and role-based access control
-- Student, Teacher, and Admin management
-- Classes and teaching assignments
-- Assignment creation, submission, grading
-- Attendance sessions and attendance tracking
-- Built using NestJS, Prisma (Postgres/MySQL/SQLite), and TypeScript
+## Architecture Overview
 
----
+The application follows a modular architecture using NestJS, with clear separation of concerns:
 
-## 🧰 Tech Stack
+- **Controllers**: Handle HTTP requests and responses for each domain (Auth, Admin, Teacher, Student, etc.).
+- **Services**: Contain business logic and interact with repositories.
+- **Repositories**: Manage data access and database queries via Prisma.
+- **Modules**: Organize related components (e.g., Auth, Assignment, Attendance).
+- **DTOs**: Define data transfer objects for request/response validation.
+- **Guards**: Implement role-based access control using JWT strategy.
 
-- Node.js + TypeScript
-- NestJS
-- Prisma (ORM)
-- PostgreSQL / MySQL / SQLite (via Prisma)
-- Jest for testing
+The architecture supports scalability through dependency injection and modular design, with Prisma handling database interactions.
 
----
+## Features
 
-## ⚙️ Prerequisites
+- User authentication and authorization with JWT
+- Role-based access control (Admin, Teacher, Student)
+- Student and teacher management
+- Class and teaching assignment management
+- Assignment creation, submission, and grading with file/URL support
+- Attendance session management and tracking
+- Report generation for grades and class summaries with export (CSV, XLSX)
+- File upload handling for submissions
 
-- Node.js 18+ (or the version you use in the project)
-- pnpm / npm / yarn
-- A database (Postgres, MySQL, SQLite, etc.)
+## Database Design
 
----
+The database schema includes the following key entities and relationships:
 
-## 📝 Environment Variables
+- **User**: Represents users (students, teachers, admins) with fields like id, name, email, password, role (STUDENT, TEACHER, ADMIN), isActive, and optional classId for students.
+- **Class**: Defines classrooms with id, name, year, isActive, and homeroomTeacherId linking to a User.
+- **Subject**: Academic subjects with id and name.
+- **TeachingAssigment**: Links teachers to classes and subjects (unique combination of teacherId, classId, subjectId).
+- **Assignment**: Tasks created by teachers with title, description, dueDate, status (DRAFT, PUBLISHED, CLOSED), submissionPolicy, and teachingAssigmentId.
+- **Submission**: Student submissions for assignments, including fileUrl, url, score, feedback, and relationships to assignment, student, and gradedBy (teacher).
+- **AttendanceSession**: Sessions for attendance with teachingAssigmentId, openAt, closeAt, isActive.
+- **Attendance**: Records with status (HADIR, IZIN, SAKIT, ALPHA), studentId, attendanceSessionId, and createById.
 
-Create a `.env` in the root and set at least:
+Relationships:
+
+- User belongs to Class (for students), has many TeachingAssigments (for teachers), and has many Submissions/Attendances.
+- Class has many Users (students), one homeroomTeacher, and many TeachingAssigments.
+- TeachingAssigment belongs to User (teacher), Class, Subject; has many Assignments, Attendances, AttendanceSessions.
+- Assignment belongs to TeachingAssigment; has many Submissions.
+- Submission belongs to Assignment, User (student), and optional User (gradedBy).
+- AttendanceSession belongs to TeachingAssigment; has many Attendances.
+- Attendance belongs to User (student), AttendanceSession, TeachingAssigment, and User (createdBy).
+
+## API Flow
+
+1. **Authentication**: Users log in via `POST /auth/login` with email/password to receive a JWT token.
+2. **Authorization**: Subsequent requests include the JWT in the Authorization header. Guards validate user roles for protected routes.
+3. **Request Flow**: Requests are routed to controllers, which delegate to services. Services interact with repositories for data operations. Responses are validated and returned, with file uploads handled via Multer.
+4. **Main Flow**: Admins manage system-wide entities; Teachers create assignments, grade submissions, and manage attendance; Students submit assignments and mark attendance.
+
+## Installation & Setup
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- pnpm (or npm/yarn)
+- PostgreSQL database server
+
+### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
 
 ```env
-DATABASE_URL="postgresql://user:pass@localhost:5432/dbname"
-JWT_SECRET_KEY="your_jwt_secret"
+DATABASE_URL="postgresql://username:password@localhost:5432/sipadi_db"
+JWT_SECRET_KEY="your_secure_jwt_secret_key"
 PORT=3000
 ```
 
-Notes:
+### Database Setup
 
-- `DATABASE_URL` is used by Prisma.
-- `JWT_SECRET_KEY` is used for signing JWT tokens.
+1. Ensure PostgreSQL is running and create a database.
+2. Run Prisma migrations:
+   ```bash
+   npx prisma migrate deploy
+   ```
+3. (Optional) Seed the database if needed:
+   ```bash
+   npx prisma db seed
+   ```
 
----
-
-## 🔁 Install & Run
+### Run Commands
 
 1. Install dependencies:
-
-```bash
-pnpm install
-# or
-npm install
-```
-
-2. Run database migrations (example with Prisma):
-
-```bash
-npx prisma migrate deploy
-# or for development
-npx prisma migrate dev --name init
-```
-
-3. Build & start the server:
-
-```bash
-pnpm start:dev
-# or
-npm run start:dev
-```
-
-The app runs on `http://localhost:3000` (or `process.env.PORT`).
-
----
-
-## ✅ Useful Scripts
-
-- Start dev server: `pnpm start:dev`
-- Build: `pnpm build`
-- Start production: `pnpm start:prod`
-- Tests: `pnpm test`
-
----
-
-## 📂 Project Structure
-
-Top-level important folders/files:
-
-```
-src/
-  auth/                # Authentication (login, guards)
-  admin/               # Admin controllers and logic
-  teacher/             # Teacher endpoints and logic
-  student/             # Student endpoints and logic
-  assignment/          # Assignment domain logic
-  submission/          # Submission and grading
-  attendance/          # Attendance handling
-  attendance-session/  # Attendance session management
-  classes/             # Class management
-  teaching/            # Teaching assignment logic
-  prisma/              # Prisma service & module
-  app.module.ts
-  main.ts
-prisma/
-  schema.prisma
-package.json
-README.md
-```
-
-> The controllers define the HTTP routes and role restrictions.
-
----
-
-## 🔐 Authentication
-
-This API uses **JWT**. After you log in, you'll receive an access token:
-
-```json
-{ "access_token": "<JWT_TOKEN>" }
-```
-
-Use the token in `Authorization: Bearer <token>` header for protected routes.
-
----
-
-## 📡 API Endpoints (Overview & Examples)
-
-Base URL: `http://localhost:3000`
-
-Note: endpoints below show the path, brief description, and an example curl request. Replace `<TOKEN>` with a valid JWT.
-
-### Auth
-
-- POST /auth/login — Login and receive JWT
-
-Example:
-
-```bash
-curl -s -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"secret"}'
-```
-
-Response:
-
-```json
-{ "access_token": "..." }
-```
-
-- POST /auth/register-admin — Register an admin
-
-```bash
-curl -s -X POST http://localhost:3000/auth/register-admin \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Admin","email":"admin@example.com","password":"secret"}'
-```
-
-### Admin (Requires ADMIN role)
-
-- POST /admin/students — Create student
-
-```bash
-curl -X POST http://localhost:3000/admin/students \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"name":"Student A","email":"student@example.com","password":"secret","classId":1}'
-```
-
-- POST /admin/teachers — Create teacher
-
-```bash
-curl -X POST http://localhost:3000/admin/teachers \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"name":"Teacher A","email":"teacher@example.com","password":"secret"}'
-```
-
-- GET /admin/users — List all users
-
-```bash
-curl -X GET http://localhost:3000/admin/users \
-  -H "Authorization: Bearer <TOKEN>"
-```
-
-- Classes endpoints: GET /admin/classes, POST /admin/classes, PATCH /admin/classes/:id, DELETE /admin/classes/:id
-
-Example create class:
-
-```bash
-curl -X POST http://localhost:3000/admin/classes \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"name":"Class A","year":2025}'
-```
-
-- Attendance session management (admin):
-  - POST /admin/attendance-session
-  - PATCH /admin/attendance-session/:id/close
-  - PATCH /admin/attendance-session/:id/force-close
-
-### Teacher (Requires TEACHER role)
-
-- POST /teacher/assignment — Create an assignment
-
-```bash
-curl -X POST http://localhost:3000/teacher/assignment \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"title":"Assignment 1","description":"Write an essay","dueDate":"2026-02-01T00:00:00.000Z","teachingAssigmentId":1}'
-```
-
-- PATCH /teacher/assignments/:id/publish — Publish assignment
-- PATCH /teacher/assignments/:id/close — Close assignment
-- GET /teacher/assignments — List teacher's assignments
-- PATCH /teacher/submission/:id/grade — Grade a submission
-
-- Attendance session (teacher):
-  - POST /teacher/attendance-session — open a session
-  - PATCH /teacher/attendance-session/:id/close — close a session
-  - GET /teacher/attendance-session/:id — get session details
-  - GET /teacher/attendance-session/:id/attendances — list attendances for session
-  - PATCH /teacher/attendances/:id — update attendance
-  - POST /teacher/attendances/bulk — create attendance in bulk
-
-### Student (Requires STUDENT role)
-
-- POST /student/assignments/submission — Submit an assignment
-
-```bash
-curl -X POST http://localhost:3000/student/assignments/submission \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"assignmentId":5,"fileUrl":"https://example.com/submission.pdf"}'
-```
-
-- GET /student/dashboard — Get student's dashboard
-- GET /student/assignments — List assignments for student
-- GET /student/assignments/:id — Get assignment detail
-- GET /student/attendances — Get student's attendances
-- POST /student/attendance/session — Attend session (based on session DTO)
-- POST /student/attendance — Mark attendance (student)
-
----
-
-## 📌 Validation & DTOs
-
-This project uses class-validator for DTO validation. Requests that do not satisfy DTO constraints will return 400 with relevant validation messages.
-
----
-
-## 🧪 Testing
-
-Run tests with:
-
-```bash
-pnpm test
-# or
-npm test
-```
-
-End-to-end tests are available with `pnpm test:e2e`.
-
----
-
-## 💡 Tips & Notes
-
-- Use a Postman or HTTP client to manage tokens and test protected endpoints quickly.
-- Ensure your `JWT_SECRET_KEY` is set before starting the app to avoid runtime errors.
-- Prisma migrations and seeding are managed via `npx prisma` commands — adapt to your DB provider.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome — open an issue or a pull request with a clear description, tests, and any migration steps.
-
----
-
-## 📄 License
-
-This project is marked as UNLICENSED in `package.json`. Update as necessary.
-
----
-
-If you'd like, I can also:
-
-- Add Postman collection examples
-- Create example .env.sample
-- Add more detailed request/response examples for each endpoint
-
----
-
-Happy hacking! 👩‍💻👨‍💻
+   ```bash
+   pnpm install
+   ```
+2. Start the development server:
+   ```bash
+   pnpm start:dev
+   ```
+3. The API will be available at `http://localhost:3000`.
+
+## API Documentation
+
+### Authentication Endpoints
+
+- `POST /auth/login`: Authenticate user and return JWT token.
+- `POST /auth/register-admin`: Register a new admin user.
+
+### Main Resource Endpoints
+
+- **Teacher**:
+  - `POST /teacher/assignments`: Create assignment.
+  - `GET /teacher/assignments`: List teacher's assignments.
+  - `PATCH /teacher/assignments/:id/publish`: Publish assignment.
+  - `PATCH /teacher/assignments/:id/close`: Close assignment.
+  - `PATCH /teacher/submissions/:id/grade`: Grade submission.
+  - `GET /teacher/reports/teaching/:id/grades`: Get grade report.
+  - `GET /teacher/reports/class/:id/export`: Export class report (CSV/XLSX).
+  - `POST /teacher/attendance-sessions`: Open attendance session.
+  - `PATCH /teacher/attendance-sessions/:id/close`: Close attendance session.
+  - `PATCH /teacher/attendances/:id`: Update attendance.
+- **Student**:
+  - `GET /student/dashboard`: Get student dashboard.
+  - `POST /student/assignments/:id/submission/url`: Submit assignment via URL.
+  - `POST /student/assignments/:id/submission/file`: Submit assignment via file upload.
+  - `GET /student/classes/:classId/attendance/active`: Get active attendance sessions.
+  - `POST /student/attendance`: Mark attendance.
+
+All protected endpoints require `Authorization: Bearer <JWT_TOKEN>` header.
+
+## Role & Permission Overview
+
+- **ADMIN**: Full access to manage users, classes, and system-wide operations (endpoints currently commented out in code).
+- **TEACHER**: Can create and manage assignments, grade submissions, manage attendance sessions, and generate reports for their teachings.
+- **STUDENT**: Can view assignments, submit work (URL or file), view attendance history, and mark attendance for active sessions.
+
+Permissions are enforced via JWT strategy and role guards.
+
+## Error Handling Strategy
+
+The API uses NestJS built-in exception handling:
+
+- Validation errors (400) for invalid input data.
+- Unauthorized (401) for missing/invalid JWT.
+- Forbidden (403) for insufficient permissions.
+- Not Found (404) for missing resources.
+- Internal Server Error (500) for unexpected issues.
+
+Custom exceptions like `ForbiddenException` are used for business logic violations. Responses include error messages for debugging.
+
+## Security Considerations
+
+- JWT tokens are used for stateless authentication with secure secrets.
+- Passwords are hashed before storage.
+- Input validation via DTOs prevents injection attacks.
+- Role-based guards restrict access to sensitive endpoints.
+- File uploads are limited to 2MB and stored securely.
+- HTTPS should be enforced in production.
+- Environment variables protect sensitive data like database credentials and JWT secrets.
+
+## Future Improvements
+
+- Implement refresh tokens for better session management.
+- Add API rate limiting to prevent abuse.
+- Integrate with external services (e.g., email notifications for assignments).
+- Enhance reporting with more analytics and visualizations.
+- Add unit and integration tests for better coverage.
+- Implement caching for improved performance on frequent queries.
+- Add admin endpoints for full CRUD operations on users and classes.
+
+## Author
+
+[Your Name or Team Name]

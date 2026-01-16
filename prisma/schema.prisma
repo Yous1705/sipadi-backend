@@ -33,6 +33,17 @@ enum AssignmentStatus{
   CLOSED
 }
 
+enum SubmissionPolicy {
+  URL_ONLY
+  FILE_ONLY
+  URL_OR_FILE
+}
+
+enum SubmissionKind {
+  URL
+  FILE
+}
+
 model User {
   id       Int    @id @default(autoincrement())
   name     String
@@ -124,6 +135,10 @@ model Assignment {
   dueDate     DateTime
   status AssignmentStatus @default(DRAFT)
   deletedAt DateTime?
+  
+  submissionPolicy SubmissionPolicy @default(URL_ONLY)
+  maxFileSizeMb Int? @default(2)        
+  allowedMime   String?
 
   teachingAssigmentId Int
   teachingAssigment   TeachingAssigment @relation(fields: [teachingAssigmentId], references: [id])
@@ -155,7 +170,13 @@ model TeachingAssigment {
 
 model Submission {
   id       Int     @id @default(autoincrement())
-  fileUrl  String
+  fileUrl String? 
+  url String?
+  storageKey String?
+  fileName   String?
+  mimeType   String?
+  fileSize   Int?
+  kind SubmissionKind @default(URL)
   score    Int?
   feedback String?
   createdAt  DateTime @default(now())

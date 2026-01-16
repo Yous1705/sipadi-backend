@@ -13,19 +13,73 @@ import { AttendanceStatus } from '@prisma/client';
 export class StudentService {
   constructor(private readonly repo: StudentRepository) {}
 
-  private async getClassId(studentId: number) {
-    const student = await this.repo.findStudentClass(studentId);
-
-    if (!student?.classId) {
-      throw new BadRequestException('Student not in class');
-    }
-
-    return student.classId;
+  private async assertStudentInClass(studentId: number, classId: number) {
+    const s = await this.repo.getStudentClassId(studentId);
+    if (!s?.classId) throw new ForbiddenException('Student has no class');
+    if (s.classId !== classId)
+      throw new ForbiddenException('Student not in this class');
+    return s.classId;
   }
 
-  async getAssignments(studentId: number) {
-    const classId = await this.getClassId(studentId);
-    return this.repo.findAssignmentsByClass(classId, studentId);
+  async getDashboard(studentId: number) {
+    const s = await this.repo.getStudentClassId(studentId);
+    if (!s?.classId) {
+      return { assignments: 0, attendanceSession: 0 };
+    }
+
+    const [assignments, attendanceSession] = await Promise.all([
+      this.repo.countPublishedAssignmentsByClass(s.classId),
+      this.repo.countActiveAttendanceSessionsByClass(s.classId),
+    ]);
+
+    return { assignments, attendanceSession };
+  }
+
+  async getMyClasses(studentId: number) {
+    const data = await this.repo.findMyClasses(studentId);
+    const cls = data?.class;
+
+    if (!cls) return [];
+
+    return cls.teachingAssigment.map((t) => ({
+      classId: cls.id,
+      className: `${cls.name} (${cls.year})`,
+      teachingAssignmentId: t.id,
+      subjectName: t.subject.name,
+      teacherName: t.teacher.name,
+    }));
+  }
+
+  async getClass(studentId: number, classId: number) {
+    await this.assertStudentInClass(studentId, classId);
+
+    const teachings = await this.repo.findClassDetail(classId, studentId);
+
+    return {
+      classId,
+      subjects: teachings.map((t) => ({
+        teachingAssignmentId: t.id,
+        subjectName: t.subject.name,
+        teacherName: t.teacher.name,
+
+        assignments: t.assignment.map((a) => ({
+          id: a.id,
+          title: a.title,
+          dueDate: a.dueDate,
+          status: a.submissions.length ? 'SUBMITTED' : 'NOT_SUBMITTED',
+          score: a.submissions[0]?.score ?? null,
+        })),
+
+        attendanceSessions: t.attendanceSession.map((s) => ({
+          id: s.id,
+          name: s.name,
+          openAt: s.openAt,
+          closeAt: s.closeAt,
+          isActive: s.isActive,
+          isAttended: s.attendances.length > 0,
+        })),
+      })),
+    };
   }
 
   async getAssignmentsDetail(studentId: number, assignmentId: number) {
@@ -45,14 +99,19 @@ export class StudentService {
       title: assignment.title,
       description: assignment.description,
       dueDate: assignment.dueDate,
-
+      submissionPolicy: assignment.submissionPolicy,
+      maxFileSizeMb: assignment.maxFileSizeMb,
       subjectName: assignment.teachingAssigment.subject.name,
       teacherName: assignment.teachingAssigment.teacher.name,
       className: assignment.teachingAssigment.class.name,
+      classId: assignment.teachingAssigment.classId,
+      teachingAssignmentId: assignment.teachingAssigmentId,
 
       submission: submission
         ? {
             id: submission.id,
+            kind: submission.kind,
+            url: submission.url,
             fileUrl: submission.fileUrl,
             submittedAt: submission.submittedAt,
             score: submission.score,
@@ -62,178 +121,111 @@ export class StudentService {
     };
   }
 
-  async getDashboard(studentId: number) {
-    const classId = await this.getClassId(studentId);
+  async getAttendanceSessionDetail(studentId: number, sessionId: number) {
+    const s = await this.repo.findAttendanceSessionDetail(sessionId);
+    if (!s) throw new NotFoundException('Attendance session not found');
 
-    const [assignments, attendanceSession] = await Promise.all([
-      this.repo.countAssignmentsByClass(classId),
-      this.repo.countActivateAttendanceSession(classId),
-    ]);
+    await this.assertStudentInClass(studentId, s.classId);
 
-    return { assignments, attendanceSession };
+    return s;
   }
 
-  async getMyAttendance(studentId: number) {
-    const student = await this.repo.findStudentById(studentId);
+  async getActiveAttendanceByClass(studentId: number, classId: number) {
+    await this.assertStudentInClass(studentId, classId);
 
-    if (!student) {
-      throw new BadRequestException('Student not found');
-    }
+    const sessions = await this.repo.findActiveAttendanceSessionsByClass(
+      classId,
+      studentId,
+    );
 
-    const attendances = await this.repo.findAttendanceRecap(studentId);
-
-    return attendances.map((a) => ({
-      subject: a.subjectName,
-      teacher: a.teacherName,
-      totalSession: a.total,
-      attendance: {
-        HADIR: a.hadir,
-        IZIN: a.izin,
-        SAKIT: a.sakit,
-        ALPHA: a.alpha,
-      },
+    return sessions.map((s) => ({
+      id: s.id,
+      name: s.name,
+      openAt: s.openAt,
+      closeAt: s.closeAt,
+      isActive: s.isActive,
+      subjectName: s.teachingAssigment.subject.name,
+      teacherName: s.teachingAssigment.teacher.name,
+      isAttended: s.attendances.length > 0,
+      status: s.attendances[0]?.status ?? null,
     }));
   }
 
-  async attendSession(studentId: number, dto: AttendSessionDto) {
-    const session = await this.repo.findAttendanceSession(
-      dto.attendanceSessionId,
-    );
+  async getAttendanceHistoryByClass(studentId: number, classId: number) {
+    await this.assertStudentInClass(studentId, classId);
 
-    if (!session || !session.isActive) {
-      throw new BadRequestException('Session not found or closed');
-    }
-
-    const student = await this.repo.findStudentById(studentId);
-    if (student?.classId !== session.teachingAssigment.classId) {
-      throw new ForbiddenException('Student not in this class');
-    }
-
-    const exist = await this.repo.findAttendance(
+    const sessions = await this.repo.findAttendanceHistoryByClass(
+      classId,
       studentId,
-      dto.attendanceSessionId,
+      30,
     );
 
-    if (exist) {
-      throw new BadRequestException('Attendance already exist');
-    }
+    return sessions.map((s) => ({
+      id: s.id,
+      name: s.name,
+      openAt: s.openAt,
+      closeAt: s.closeAt,
+      isActive: s.isActive,
+      subjectName: s.teachingAssigment.subject.name,
+      teacherName: s.teachingAssigment.teacher.name,
 
-    if (
-      (dto.status === AttendanceStatus.IZIN ||
-        dto.status === AttendanceStatus.SAKIT) &&
-      !dto.note
-    ) {
-      throw new BadRequestException('Note is required');
-    }
-
-    return this.repo.createAttendance({
-      student: { connect: { id: studentId } },
-      attendanceSession: { connect: { id: dto.attendanceSessionId } },
-      teachingAssigment: { connect: { id: session.teachingAssigment.id } },
-      status: dto.status,
-      note: dto.note,
-      createdBy: { connect: { id: studentId } },
-    });
+      attendance: s.attendances.length
+        ? {
+            status: s.attendances[0].status,
+            note: s.attendances[0].note,
+            attendedAt: s.attendances[0].createdAt,
+          }
+        : null,
+    }));
   }
 
-  async findMyClasses(studentId: number) {
-    const student = await this.repo.findMyClasses(studentId);
+  async getMySubjects(studentId: number) {
+    const data = await this.repo.findMyClasses(studentId);
+    const cls = data?.class;
+    if (!cls) return [];
 
-    if (!student || !student.class) {
-      return [];
-    }
-
-    return student.class.teachingAssigment.map((t) => ({
-      classId: student.classId,
-      className: student.class?.name,
-      teachingAssignmentId: t.id,
+    return cls.teachingAssigment.map((t) => ({
+      classId: cls.id,
+      teachingAssigmentId: t.id,
       subjectName: t.subject.name,
       teacherName: t.teacher.name,
     }));
   }
 
-  async getClassDetail(studentId: number, classId: number) {
-    const student = await this.repo.findStudentClass(studentId);
+  async getSubject(teachingAssigmentId: number, studentId: number) {
+    const s = await this.repo.getStudentClassId(studentId);
+    if (!s?.classId) throw new ForbiddenException('Student has no class');
 
-    if (!student || student.classId !== classId) {
-      throw new ForbiddenException('Not your class');
-    }
+    const detail = await this.repo.findSubjectDetail(
+      s.classId,
+      teachingAssigmentId,
+      studentId,
+    );
 
-    const teachingAssignments =
-      await this.repo.findTeachingAssignmentsWithDetail(classId, studentId);
+    if (!detail) throw new NotFoundException('Subject not found');
 
     return {
-      classId,
-      subjects: teachingAssignments.map((ta) => ({
-        teachingAssignmentId: ta.id,
-        subjectName: ta.subject.name,
-        teacherName: ta.teacher.name,
+      teachingAssigmentId: detail.id,
+      subjectName: detail.subject.name,
+      teacherName: detail.teacher.name,
+      classId: s.classId,
 
-        assignments: ta.assignment.map((a) => ({
-          id: a.id,
-          title: a.title,
-          dueDate: a.dueDate,
-          status: a.submissions.length ? 'SUBMITTED' : 'NOT_SUBMITTED',
-          score: a.submissions[0]?.score ?? null,
-        })),
+      assignments: detail.assignment.map((a) => ({
+        id: a.id,
+        title: a.title,
+        dueDate: a.dueDate,
+        status: a.submissions.length ? 'SUBMITTED' : 'NOT_SUBMITTED',
+        score: a.submissions[0]?.score ?? null,
+      })),
 
-        attendanceSessions: ta.attendanceSession.map((s) => ({
-          id: s.id,
-          name: s.name,
-          openAt: s.openAt,
-          closeAt: s.closeAt,
-          isActive: s.isActive,
-          isAttended: s.attendances.length > 0,
-        })),
+      activeAttendanceSessions: detail.attendanceSession.map((sess) => ({
+        id: sess.id,
+        name: sess.name,
+        openAt: sess.openAt,
+        closeAt: sess.closeAt,
+        isActive: sess.isActive,
+        isAttended: sess.attendances.length > 0,
       })),
     };
-  }
-
-  async getAttendanceSessionDetail(studentId: number, sessionId: number) {
-    const session = await this.repo.findAttendanceSessionDetail(sessionId);
-
-    if (!session) {
-      throw new BadRequestException('Attendance session not found');
-    }
-
-    const student = await this.repo.findStudentById(studentId);
-
-    if (student?.classId !== session.classId) {
-      throw new ForbiddenException('Not your class');
-    }
-
-    return {
-      id: session.id,
-      name: session.name,
-      openAt: session.openAt,
-      closeAt: session.closeAt,
-      isActive: session.isActive,
-      subjectName: session.subjectName,
-      teacherName: session.teacherName,
-    };
-  }
-
-  async getAssignmentsByTeaching(
-    studentId: number,
-    teachingAssignmentId: number,
-  ) {
-    const student = await this.repo.findStudentClass(studentId);
-
-    if (!student?.classId) {
-      throw new BadRequestException('Student not in class');
-    }
-
-    const teaching =
-      await this.repo.findTeachingAssignmentById(teachingAssignmentId);
-
-    if (!teaching) {
-      throw new BadRequestException('Teaching assignment not found');
-    }
-
-    if (teaching.classId !== student.classId) {
-      throw new ForbiddenException('Not your class');
-    }
-
-    return this.repo.findAssignmentsByTeaching(teachingAssignmentId, studentId);
   }
 }

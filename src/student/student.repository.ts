@@ -6,26 +6,24 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class StudentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findStudentClass(studentId: number) {
+  getStudentClassId(studentId: number) {
     return this.prisma.user.findUnique({
       where: { id: studentId },
-      select: {
-        classId: true,
-      },
+      select: { classId: true },
     });
   }
 
-  countAssignmentsByClass(classId: number) {
+  countPublishedAssignmentsByClass(classId: number) {
     return this.prisma.assignment.count({
       where: {
-        teachingAssigment: {
-          classId,
-        },
+        teachingAssigment: { classId },
+        status: AssignmentStatus.PUBLISHED,
+        deletedAt: null,
       },
     });
   }
 
-  countActivateAttendanceSession(classId: number) {
+  countActiveAttendanceSessionsByClass(classId: number) {
     return this.prisma.attendanceSession.count({
       where: {
         teachingAssigment: { classId },
@@ -34,75 +32,65 @@ export class StudentRepository {
     });
   }
 
-  findAssignmentsByClass(classId: number, studentId: number) {
-    return this.prisma.assignment.findMany({
-      where: {
-        teachingAssigment: {
-          classId,
-        },
-        status: AssignmentStatus.PUBLISHED,
-        deletedAt: null,
-      },
-      include: {
-        submissions: {
-          where: {
-            studentId,
-          },
+  findMyClasses(studentId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: studentId },
+      select: {
+        class: {
           select: {
             id: true,
-            score: true,
+            name: true,
+            year: true,
+            teachingAssigment: {
+              select: {
+                id: true,
+                subject: { select: { name: true } },
+                teacher: { select: { name: true } },
+              },
+            },
           },
         },
-        teachingAssigment: {
-          include: {
-            subject: { select: { name: true } },
-            teacher: { select: { name: true } },
-          },
-        },
-      },
-      orderBy: {
-        dueDate: 'asc',
       },
     });
   }
 
-  findAssignmentsByTeaching(teachingAssignmentId: number, studentId: number) {
-    return this.prisma.assignment.findMany({
-      where: {
-        teachingAssigmentId: teachingAssignmentId,
-        status: 'PUBLISHED',
-        deletedAt: null,
-      },
-      include: {
-        submissions: {
-          where: { studentId },
+  findClassDetail(classId: number, studentId: number) {
+    return this.prisma.teachingAssigment.findMany({
+      where: { classId },
+      select: {
+        id: true,
+        subject: { select: { name: true } },
+        teacher: { select: { name: true } },
+
+        assignment: {
+          where: { status: AssignmentStatus.PUBLISHED, deletedAt: null },
           select: {
             id: true,
-            score: true,
+            title: true,
+            dueDate: true,
+            submissions: {
+              where: { studentId },
+              select: { score: true },
+            },
           },
+          orderBy: { dueDate: 'asc' },
         },
-      },
-      orderBy: {
-        dueDate: 'asc',
-      },
-    });
-  }
 
-  findTeachingAssignmentById(id: number) {
-    return this.prisma.teachingAssigment.findUnique({
-      where: {
-        id,
-      },
-    });
-  }
-
-  findAssignmentById(id: number) {
-    return this.prisma.assignment.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        teachingAssigment: true,
+        attendanceSession: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            name: true,
+            openAt: true,
+            closeAt: true,
+            isActive: true,
+            attendances: {
+              where: { studentId },
+              select: { id: true },
+            },
+          },
+          orderBy: { openAt: 'desc' },
+        },
       },
     });
   }
@@ -112,12 +100,9 @@ export class StudentRepository {
       where: {
         id: assignmentId,
         teachingAssigment: {
-          class: {
-            students: {
-              some: { id: studentId },
-            },
-          },
+          class: { students: { some: { id: studentId } } },
         },
+        deletedAt: null,
       },
       include: {
         teachingAssigment: {
@@ -135,194 +120,67 @@ export class StudentRepository {
             feedback: true,
             submittedAt: true,
             fileUrl: true,
+
+            kind: true,
+            url: true,
           },
         },
       },
     });
   }
 
-  findStudentById(id: number) {
-    return this.prisma.user.findUnique({
+  findActiveAttendanceSessionsByClass(classId: number, studentId: number) {
+    return this.prisma.attendanceSession.findMany({
       where: {
-        id,
+        teachingAssigment: { classId },
+        isActive: true,
       },
-    });
-  }
-
-  findSubmission(studentId: number, assignmentId: number) {
-    return this.prisma.submission.findFirst({
-      where: {
-        studentId,
-        assignmentId,
-      },
-    });
-  }
-
-  createSubmission(data: {
-    studentId: number;
-    assignmentId: number;
-    fileUrl: string;
-  }) {
-    return this.prisma.submission.create({ data });
-  }
-
-  findAttendances(studentId: number) {
-    return this.prisma.attendance.findMany({
-      where: {
-        studentId,
-      },
-      include: {
-        attendanceSession: {
-          include: {
-            teachingAssigment: {
-              include: {
-                subject: { select: { name: true } },
-                teacher: { select: { name: true } },
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        attendanceSession: {
-          openAt: 'desc',
-        },
-      },
-    });
-  }
-
-  findAttendanceSession(id: number) {
-    return this.prisma.attendanceSession.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        teachingAssigment: true,
-      },
-    });
-  }
-
-  findAttendance(studentId: number, attendanceSessionId: number) {
-    return this.prisma.attendance.findUnique({
-      where: {
-        studentId_attendanceSessionId: {
-          studentId,
-          attendanceSessionId,
-        },
-      },
-    });
-  }
-
-  createAttendance(data: Prisma.AttendanceCreateInput) {
-    return this.prisma.attendance.create({ data });
-  }
-
-  findMyClasses(studentId: number) {
-    return this.prisma.user.findUnique({
-      where: { id: studentId },
-      include: {
-        class: {
-          include: {
-            teachingAssigment: {
-              include: {
-                subject: { select: { name: true } },
-                teacher: { select: { name: true } },
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async findAttendanceRecap(studentId: number) {
-    const records = await this.prisma.attendance.findMany({
-      where: {
-        studentId,
-      },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        openAt: true,
+        closeAt: true,
+        isActive: true,
+        teachingAssigmentId: true,
         teachingAssigment: {
-          include: {
-            subject: true,
-            teacher: true,
+          select: {
+            subject: { select: { name: true } },
+            teacher: { select: { name: true } },
           },
         },
+        attendances: {
+          where: { studentId },
+          select: { id: true, status: true },
+        },
       },
+      orderBy: { openAt: 'desc' },
     });
-
-    const map = new Map<number, any>();
-
-    for (const r of records) {
-      const key = r.teachingAssigmentId;
-
-      if (!map.has(key)) {
-        map.set(key, {
-          subjectName: r.teachingAssigment.subject.name,
-          teacherName: r.teachingAssigment.teacher.name,
-          total: 0,
-          hadir: 0,
-          izin: 0,
-          sakit: 0,
-          alpha: 0,
-        });
-      }
-
-      const agg = map.get(key);
-      agg.total++;
-
-      switch (r.status) {
-        case 'HADIR':
-          agg.hadir++;
-          break;
-        case 'IZIN':
-          agg.izin++;
-          break;
-        case 'SAKIT':
-          agg.sakit++;
-          break;
-        case 'ALPHA':
-          agg.alpha++;
-          break;
-      }
-    }
-
-    return Array.from(map.values());
   }
 
-  findTeachingAssignmentsWithDetail(classId: number, studentId: number) {
-    return this.prisma.teachingAssigment.findMany({
+  findAttendanceHistoryByClass(classId: number, studentId: number, take = 30) {
+    return this.prisma.attendanceSession.findMany({
       where: {
-        classId,
+        teachingAssigment: { classId },
       },
-      include: {
-        subject: { select: { name: true } },
-        teacher: { select: { name: true } },
-
-        assignment: {
-          where: {
-            status: 'PUBLISHED',
-            deletedAt: null,
+      select: {
+        id: true,
+        name: true,
+        openAt: true,
+        closeAt: true,
+        isActive: true,
+        teachingAssigment: {
+          select: {
+            subject: { select: { name: true } },
+            teacher: { select: { name: true } },
           },
-          include: {
-            submissions: {
-              where: { studentId },
-              select: { score: true },
-            },
-          },
-          orderBy: { dueDate: 'asc' },
         },
-
-        attendanceSession: {
-          where: { isActive: true },
-          include: {
-            attendances: {
-              where: { studentId },
-              select: { id: true },
-            },
-          },
-          orderBy: { openAt: 'desc' },
+        attendances: {
+          where: { studentId },
+          select: { id: true, status: true, note: true, createdAt: true },
         },
       },
+      orderBy: { openAt: 'desc' },
+      take,
     });
   }
 
@@ -339,12 +197,8 @@ export class StudentRepository {
           teachingAssigment: {
             select: {
               classId: true,
-              subject: {
-                select: { name: true },
-              },
-              teacher: {
-                select: { name: true },
-              },
+              subject: { select: { name: true } },
+              teacher: { select: { name: true } },
             },
           },
         },
@@ -363,5 +217,50 @@ export class StudentRepository {
             }
           : null,
       );
+  }
+
+  findSubjectDetail(
+    classId: number,
+    teachingAssigmentId: number,
+    studentId: number,
+  ) {
+    return this.prisma.teachingAssigment.findFirst({
+      where: { id: teachingAssigmentId, classId },
+      select: {
+        id: true,
+        subject: { select: { name: true } },
+        teacher: { select: { name: true } },
+
+        assignment: {
+          where: { status: AssignmentStatus.PUBLISHED, deletedAt: null },
+          select: {
+            id: true,
+            title: true,
+            dueDate: true,
+            submissions: {
+              where: { studentId },
+              select: { score: true },
+            },
+          },
+          orderBy: { dueDate: 'asc' },
+        },
+
+        attendanceSession: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            name: true,
+            openAt: true,
+            closeAt: true,
+            isActive: true,
+            attendances: {
+              where: { studentId },
+              select: { id: true },
+            },
+          },
+          orderBy: { openAt: 'desc' },
+        },
+      },
+    });
   }
 }

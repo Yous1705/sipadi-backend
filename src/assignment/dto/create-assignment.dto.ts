@@ -1,8 +1,12 @@
+import { SubmissionPolicy } from '@prisma/client';
 import {
   IsDateString,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
+  Max,
+  Min,
   MinLength,
 } from 'class-validator';
 
@@ -17,6 +21,16 @@ export class CreateAssignmentDto {
 
   @IsDateString()
   dueDate: Date;
+
+  @IsOptional()
+  @IsEnum(SubmissionPolicy)
+  submissionPolicy?: SubmissionPolicy;
+
+  @IsInt()
+  @IsOptional()
+  @Min(1)
+  @Max(10)
+  maxFileSizeMb?: number;
 
   @IsInt()
   teachingAssigmentId: number;

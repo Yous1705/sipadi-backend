@@ -23,9 +23,31 @@ export class SubmissionService {
     private readonly reportService: ReportService,
   ) {}
 
-  async submit(
+  async submitUrl(assignmentId: number, url: string, studentId: number) {
+    const assignment = await this.assignmentRepo.findById(assignmentId);
+
+    if (!assignment) {
+      throw new BadRequestException('Assignment not found');
+    }
+
+    if (assignment.submissionPolicy === 'FILE_ONLY') {
+      throw new BadRequestException('Assignment requires file upload');
+    }
+
+    if (new Date() > assignment.dueDate) {
+      throw new BadRequestException('Deadline passed');
+    }
+
+    return this.repo.upsertUrlSubmission({
+      assignmentId,
+      studentId,
+      url,
+    });
+  }
+
+  async submitFile(
     assignmentId: number,
-    dto: SubmitAssignmentDto,
+    file: Express.Multer.File,
     studentId: number,
   ) {
     const assignment = await this.assignmentRepo.findById(assignmentId);
@@ -34,32 +56,27 @@ export class SubmissionService {
       throw new BadRequestException('Assignment not found');
     }
 
-    if (assignment.status !== 'PUBLISHED') {
-      throw new BadRequestException('Assignment not open');
+    if (!assignment.maxFileSizeMb) {
+      assignment.maxFileSizeMb = 2;
+    }
+
+    if (assignment.submissionPolicy === 'URL_ONLY') {
+      throw new BadRequestException('Assignment requires URL submission');
+    }
+
+    if (file.size > assignment.maxFileSizeMb * 1024 * 1024) {
+      throw new BadRequestException('File too large');
     }
 
     if (new Date() > assignment.dueDate) {
-      throw new BadRequestException('Assignment already closed');
+      throw new BadRequestException('Deadline passed');
     }
 
-    const student = await this.prisma.user.findUnique({
-      where: { id: studentId },
-      select: { classId: true },
+    return this.repo.upsertFileSubmission({
+      assignmentId,
+      studentId,
+      file,
     });
-
-    if (!student) {
-      throw new BadRequestException('Student not found');
-    }
-
-    if (!student.classId) {
-      throw new BadRequestException('Student not assigned to any class');
-    }
-
-    if (student.classId !== assignment.teachingAssigment.class.id) {
-      throw new BadRequestException('Not your assignment');
-    }
-
-    return this.repo.upsertSubmission(assignmentId, dto.fileUrl, studentId);
   }
 
   async gradeSubmission(

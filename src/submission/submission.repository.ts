@@ -80,4 +80,64 @@ export class SubmissionRepository {
       },
     });
   }
+
+  upsertUrlSubmission(data: {
+    assignmentId: number;
+    studentId: number;
+    url: string;
+  }) {
+    return this.prisma.submission.upsert({
+      where: {
+        studentId_assignmentId: {
+          studentId: data.studentId,
+          assignmentId: data.assignmentId,
+        },
+      },
+      create: {
+        ...data,
+        kind: 'URL',
+      },
+      update: {
+        url: data.url,
+        kind: 'URL',
+        submittedAt: new Date(),
+      },
+    });
+  }
+
+  upsertFileSubmission(data: {
+    assignmentId: number;
+    studentId: number;
+    file: Express.Multer.File;
+  }) {
+    const fileUrl = `/uploads/submissions/${data.file.filename}`;
+
+    return this.prisma.submission.upsert({
+      where: {
+        studentId_assignmentId: {
+          studentId: data.studentId,
+          assignmentId: data.assignmentId,
+        },
+      },
+      create: {
+        assignmentId: data.assignmentId,
+        studentId: data.studentId,
+        kind: 'FILE',
+        fileName: data.file.originalname,
+        mimeType: data.file.mimetype,
+        fileSize: data.file.size,
+        storageKey: data.file.filename,
+        fileUrl,
+      },
+      update: {
+        kind: 'FILE',
+        fileName: data.file.originalname,
+        mimeType: data.file.mimetype,
+        fileSize: data.file.size,
+        storageKey: data.file.filename,
+        fileUrl,
+        submittedAt: new Date(),
+      },
+    });
+  }
 }

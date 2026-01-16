@@ -1,16 +1,10 @@
-import { CreateAssignmentByTeacherDto } from './dto/create-assignment.dto';
 import {
   BadRequestException,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { CreateTeacherDto } from './dto/create-teacher.dto';
-import { UpdateTeacherDto } from './dto/update-teacher.dto';
+
 import { TeacherRepository } from './teacher.repository';
-import { UpdateAssignmentByTeacherDto } from './dto/update-assignment.dto';
-import { InputAttendanceByTeacherDto } from './dto/input-attendance.dto';
-import { UpdateInputAttendanceByTeacherDto } from './dto/update-input-attendance.dto';
-import { GradeSubmissionDto } from '../submission/dto/create-grade-submission.dto';
 import { TeachingRepository } from 'src/teaching/teaching.repository';
 
 @Injectable()

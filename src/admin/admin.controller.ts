@@ -52,161 +52,161 @@ export class AdminController {
 
   // ===================== USER ====================
 
-  @Post('students')
-  createStudent(@Body() dto: CreateStudentDto) {
-    return this.adminService.createStudent(dto);
-  }
+  // @Post('students')
+  // createStudent(@Body() dto: CreateStudentDto) {
+  //   return this.adminService.createStudent(dto);
+  // }
 
-  @Post('teachers')
-  createTeacher(@Body() dto: CreateTeacherDto) {
-    return this.adminService.createTeacher(dto);
-  }
+  // @Post('teachers')
+  // createTeacher(@Body() dto: CreateTeacherDto) {
+  //   return this.adminService.createTeacher(dto);
+  // }
 
-  @Patch('users/:id/reset-password')
-  resetUserPassword(
-    @Param('id') id: number,
-    @Body('newPassword') newPassword: string,
-  ) {
-    return this.adminService.resetUserPassword(id, newPassword);
-  }
+  // @Patch('users/:id/reset-password')
+  // resetUserPassword(
+  //   @Param('id') id: number,
+  //   @Body('newPassword') newPassword: string,
+  // ) {
+  //   return this.adminService.resetUserPassword(id, newPassword);
+  // }
 
-  @Get('users/:id')
-  findById(@Param('id') id: number) {
-    return this.userService.findById(id);
-  }
+  // @Get('users/:id')
+  // findById(@Param('id') id: number) {
+  //   return this.userService.findById(id);
+  // }
 
-  @Get('users')
-  findAll() {
-    return this.userService.findAll();
-  }
+  // @Get('users')
+  // findAll() {
+  //   return this.userService.findAll();
+  // }
 
-  @Get('users/role/:role')
-  findAllByRole(@Param('role', new ParseEnumPipe(Role)) role: Role) {
-    return this.userService.findAllByRole(role);
-  }
+  // @Get('users/role/:role')
+  // findAllByRole(@Param('role', new ParseEnumPipe(Role)) role: Role) {
+  //   return this.userService.findAllByRole(role);
+  // }
 
-  @Get('class/:id')
-  findByClass(@Param('id') classId: number) {
-    return this.userService.findByClass(classId);
-  }
+  // @Get('class/:id')
+  // findByClass(@Param('id') classId: number) {
+  //   return this.userService.findByClass(classId);
+  // }
 
-  // ===================== CLASSES ====================
+  // // ===================== CLASSES ====================
 
-  @Get('classes')
-  findAllClasses() {
-    return this.classesService.findAll();
-  }
+  // @Get('classes')
+  // findAllClasses() {
+  //   return this.classesService.findAll();
+  // }
 
-  @Get('classes/:id')
-  findClassById(@Param('id', ParseIntPipe) id: number) {
-    return this.classesService.findById(id);
-  }
+  // @Get('classes/:id')
+  // findClassById(@Param('id', ParseIntPipe) id: number) {
+  //   return this.classesService.findById(id);
+  // }
 
-  @Get('classes/:name/:year')
-  findClassByNameAndYear(
-    @Param('name') name: string,
-    @Param('year', ParseIntPipe) year: number,
-  ) {
-    return this.classesService.findByNameAndYear(name, year);
-  }
+  // @Get('classes/:name/:year')
+  // findClassByNameAndYear(
+  //   @Param('name') name: string,
+  //   @Param('year', ParseIntPipe) year: number,
+  // ) {
+  //   return this.classesService.findByNameAndYear(name, year);
+  // }
 
-  @Post('classes')
-  createClass(@Body() dto: CreateClassDto) {
-    return this.adminService.createCLass(dto);
-  }
+  // @Post('classes')
+  // createClass(@Body() dto: CreateClassDto) {
+  //   return this.adminService.createCLass(dto);
+  // }
 
-  @Patch('classes/:id')
-  updateClass(@Param('id') id: number, @Body() dto: UpdateClassDto) {
-    return this.adminService.updateClass(id, dto);
-  }
+  // @Patch('classes/:id')
+  // updateClass(@Param('id') id: number, @Body() dto: UpdateClassDto) {
+  //   return this.adminService.updateClass(id, dto);
+  // }
 
-  @Delete('classes/:id')
-  deleteClass(@Param('id') id: number) {
-    return this.adminService.deleteClass(id);
-  }
+  // @Delete('classes/:id')
+  // deleteClass(@Param('id') id: number) {
+  //   return this.adminService.deleteClass(id);
+  // }
 
-  @Post('classes/homeroom')
-  assignHomeroomTeacher(@Body() dto: AssignHomeroomTeacherDto) {
-    return this.adminService.assignHomeroomTeacher(dto);
-  }
+  // @Post('classes/homeroom')
+  // assignHomeroomTeacher(@Body() dto: AssignHomeroomTeacherDto) {
+  //   return this.adminService.assignHomeroomTeacher(dto);
+  // }
 
-  @Patch('classes/student/move')
-  moveStudent(@Body() dto: MoveStudentDto) {
-    return this.adminService.moveStudent(dto);
-  }
+  // @Patch('classes/student/move')
+  // moveStudent(@Body() dto: MoveStudentDto) {
+  //   return this.adminService.moveStudent(dto);
+  // }
 
-  @Patch('classes/student/:id/remove-class')
-  removeStudentFromClass(@Param('id') studentId: number) {
-    return this.adminService.removeStudentFromClass(studentId);
-  }
+  // @Patch('classes/student/:id/remove-class')
+  // removeStudentFromClass(@Param('id') studentId: number) {
+  //   return this.adminService.removeStudentFromClass(studentId);
+  // }
 
-  // ===================== TEACHING ====================
+  // // ===================== TEACHING ====================
 
-  @Post('teaching-assignments')
-  assignTeacher(@Body() dto: AssignTeacherDto) {
-    return this.adminService.assignTeacher(dto);
-  }
+  // @Post('teaching-assignments')
+  // assignTeacher(@Body() dto: AssignTeacherDto) {
+  //   return this.adminService.assignTeacher(dto);
+  // }
 
-  @Delete('teaching-assignments/:id')
-  unassignTeacher(@Param('id') id: number) {
-    return this.adminService.unassignTeacher(id);
-  }
+  // @Delete('teaching-assignments/:id')
+  // unassignTeacher(@Param('id') id: number) {
+  //   return this.adminService.unassignTeacher(id);
+  // }
 
-  @Get('teaching-assignments')
-  findAllTeachingAssignments() {
-    return this.teachingService.findAll();
-  }
+  // @Get('teaching-assignments')
+  // findAllTeachingAssignments() {
+  //   return this.teachingService.findAll();
+  // }
 
-  @Post('subjects')
-  createSubject(@Body() dto: CreateSubjectDto) {
-    return this.teachingService.createSubject(dto);
-  }
+  // @Post('subjects')
+  // createSubject(@Body() dto: CreateSubjectDto) {
+  //   return this.teachingService.createSubject(dto);
+  // }
 
-  @Patch('subjects/:id')
-  updateSubject(@Param('id') id: number, @Body() dto: UpdateSubjectDto) {
-    return this.teachingService.updateSubject(id, dto);
-  }
+  // @Patch('subjects/:id')
+  // updateSubject(@Param('id') id: number, @Body() dto: UpdateSubjectDto) {
+  //   return this.teachingService.updateSubject(id, dto);
+  // }
 
-  @Get('subjects')
-  findAllSubject() {
-    return this.teachingService.findAllSubject();
-  }
+  // @Get('subjects')
+  // findAllSubject() {
+  //   return this.teachingService.findAllSubject();
+  // }
 
-  // ===================== ATTENDANCE SESSION ====================
+  // // ===================== ATTENDANCE SESSION ====================
 
-  @Post('attendance-session')
-  openSession(@Body() dto: OpenAttendanceSessionDto) {
-    return this.attendanceSessionService.open(dto);
-  }
+  // @Post('attendance-session')
+  // openSession(@Body() dto: OpenAttendanceSessionDto) {
+  //   return this.attendanceSessionService.open(dto);
+  // }
 
-  @Patch('attendance-session/:id/close')
-  closeSession(@Param('id') id: number, @Req() req) {
-    return this.attendanceSessionService.close(id, req.user.sub);
-  }
+  // @Patch('attendance-session/:id/close')
+  // closeSession(@Param('id') id: number, @Req() req) {
+  //   return this.attendanceSessionService.close(id, req.user.sub);
+  // }
 
-  @Get('attendance-session')
-  getAllSession(@Query() query) {
-    return this.attendanceSessionService.listAll(query);
-  }
+  // @Get('attendance-session')
+  // getAllSession(@Query() query) {
+  //   return this.attendanceSessionService.listAll(query);
+  // }
 
-  @Get('attendance-session/:id')
-  getSession(@Param('id') id: number) {
-    return this.attendanceSessionService.getDetailWithStudent(id);
-  }
+  // @Get('attendance-session/:id')
+  // getSession(@Param('id') id: number) {
+  //   return this.attendanceSessionService.getDetailWithStudent(id);
+  // }
 
-  @Patch('attendance-session/:id/force-close')
-  forceClose(@Param('id') id: number) {
-    return this.attendanceSessionService.forceClose(id);
-  }
+  // @Patch('attendance-session/:id/force-close')
+  // forceClose(@Param('id') id: number) {
+  //   return this.attendanceSessionService.forceClose(id);
+  // }
 
-  // ===================== ATTENDANCE ====================
-  @Get('attendances')
-  getAttendances(@Query() query) {
-    return this.attendanceService.getAllAttendances(query);
-  }
+  // // ===================== ATTENDANCE ====================
+  // @Get('attendances')
+  // getAttendances(@Query() query) {
+  //   return this.attendanceService.getAllAttendances(query);
+  // }
 
-  @Patch('attendances/:id')
-  updateAttendance(@Param('id') id: number, @Body() dto: UpdateAttendanceDto) {
-    return this.attendanceService.updateAttendance(id, dto);
-  }
+  // @Patch('attendances/:id')
+  // updateAttendance(@Param('id') id: number, @Body() dto: UpdateAttendanceDto) {
+  //   return this.attendanceService.updateAttendance(id, dto);
+  // }
 }

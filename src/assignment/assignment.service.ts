@@ -7,7 +7,7 @@ import { AssignmentRepository } from './assignment.repository';
 import { TeachingRepository } from 'src/teaching/teaching.repository';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
-import { AssignmentStatus, Prisma } from '@prisma/client';
+import { AssignmentStatus, Prisma, SubmissionPolicy } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -29,6 +29,8 @@ export class AssignmentService {
       title: dto.title,
       description: dto.description,
       dueDate: dto.dueDate,
+      submissionPolicy: dto.submissionPolicy ?? SubmissionPolicy.URL_ONLY,
+      maxFileSizeMb: dto.maxFileSizeMb ?? 2,
       status: AssignmentStatus.DRAFT,
       teachingAssigment: {
         connect: {
@@ -89,6 +91,10 @@ export class AssignmentService {
       throw new BadRequestException('Assignment not found');
     }
 
+    if (assignment.status === AssignmentStatus.CLOSED) {
+      throw new BadRequestException('Closed assignment cannot be updated');
+    }
+
     if (assignment.teachingAssigment.teacherId !== teacherId) {
       throw new BadRequestException('Unauthorized teaching assignment');
     }
@@ -106,7 +112,11 @@ export class AssignmentService {
       }
     }
 
-    return this.repo.update(id, updateData);
+    return this.repo.update(id, {
+      title: dto.title,
+      description: dto.description,
+      dueDate: dto.dueDate,
+    });
   }
 
   async delete(id: number, teacherId: number) {

@@ -42,7 +42,7 @@ export class AssignmentRepository {
   async findById(id: number) {
     await this.ensureClosedIfOverdueById(id);
 
-    return this.prisma.assignment.findUnique({
+    return this.prisma.assignment.findFirst({
       where: { id, deletedAt: null },
       include: {
         teachingAssigment: {
@@ -121,7 +121,7 @@ export class AssignmentRepository {
   async getAssignmentDetail(assignmentId: number) {
     await this.ensureClosedIfOverdueById(assignmentId);
 
-    return this.prisma.assignment.findUnique({
+    return this.prisma.assignment.findFirst({
       where: { id: assignmentId, deletedAt: null },
       include: {
         teachingAssigment: {

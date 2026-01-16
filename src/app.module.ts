@@ -14,9 +14,29 @@ import { SubmissionModule } from './submission/submission.module';
 import { StudentModule } from './student/student.module';
 import { AttendanceSessionModule } from './attendance-session/attendance-session.module';
 import { ReportModule } from './report/report.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
-  imports: [PrismaModule, AuthModule, AdminModule, TeacherModule, AttendanceModule, UserModule, ClassesModule, TeachingModule, AssignmentModule, SubmissionModule, StudentModule, AttendanceSessionModule, ReportModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    AdminModule,
+    TeacherModule,
+    AttendanceModule,
+    UserModule,
+    ClassesModule,
+    TeachingModule,
+    AssignmentModule,
+    SubmissionModule,
+    StudentModule,
+    AttendanceSessionModule,
+    ReportModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
