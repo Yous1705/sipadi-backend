@@ -111,4 +111,8 @@ export class ClassesService {
   findByNameAndYear(name: string, year: number) {
     return this.repo.findByNameAndYear(name, year);
   }
+
+  listForAdmin() {
+    return this.repo.listForAdmin();
+  }
 }

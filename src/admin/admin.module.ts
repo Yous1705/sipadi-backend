@@ -8,6 +8,7 @@ import { TeachingModule } from 'src/teaching/teaching.module';
 import { ClassesModule } from 'src/classes/classes.module';
 import { AttendanceSessionModule } from 'src/attendance-session/attendance-session.module';
 import { AssignmentModule } from 'src/assignment/assignment.module';
+import { AdminRepository } from './admin.repository';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { AssignmentModule } from 'src/assignment/assignment.module';
     AssignmentModule,
   ],
   controllers: [AdminController],
-  providers: [AdminService],
+  providers: [AdminService, AdminRepository],
 })
 export class AdminModule {}

@@ -292,4 +292,18 @@ export class AttendanceSessionService {
       };
     });
   }
+
+  async closeAsAdmin(sessionId: number, adminId: number) {
+    const session = await this.prisma.attendanceSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, isActive: true },
+    });
+
+    if (!session || !session.isActive) {
+      throw new BadRequestException('Session not found or already closed');
+    }
+
+    await this.repo.closeWithAlpha(sessionId, adminId);
+    return { success: true };
+  }
 }

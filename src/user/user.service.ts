@@ -51,11 +51,7 @@ export class UserService {
     return this.repo.update(id, {
       name: dto.name,
       email: dto.email,
-      class: {
-        connect: {
-          id: dto.classId,
-        },
-      },
+      class: dto.classId ? { connect: { id: dto.classId } } : {},
     });
   }
 
@@ -63,7 +59,7 @@ export class UserService {
     const teacher = await this.ensureActiveUser(id, Role.TEACHER);
 
     if (dto.email && dto.email !== teacher.email) {
-      this.ensureEmailUnique(dto.email);
+      await this.ensureEmailUnique(dto.email);
     }
 
     return this.repo.update(id, {
@@ -159,5 +155,9 @@ export class UserService {
 
   findAllByRole(role: Role) {
     return this.repo.findAllByRole(role);
+  }
+
+  listUsers(params?: { role?: Role; isActive?: boolean }) {
+    return this.repo.listUsers(params);
   }
 }

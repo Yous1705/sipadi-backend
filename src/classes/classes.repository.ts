@@ -1,8 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { disconnect } from 'process';
-import { connect } from 'http2';
 
 @Injectable()
 export class ClassesRepository {
@@ -83,5 +81,33 @@ export class ClassesRepository {
 
   findAll() {
     return this.prisma.class.findMany();
+  }
+
+  listForAdmin() {
+    return this.prisma.class.findMany({
+      orderBy: [{ year: 'desc' }, { name: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        year: true,
+        isActive: true,
+        homeroomTeacher: {
+          select: { id: true, name: true },
+        },
+        _count: {
+          select: { students: true },
+        },
+      },
+    });
+  }
+
+  countAll() {
+    return this.prisma.class.count();
+  }
+
+  countActive() {
+    return this.prisma.class.count({
+      where: { isActive: true },
+    });
   }
 }

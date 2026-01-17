@@ -35,9 +35,18 @@ export class UserRepository {
     return this.prisma.user.findMany({
       where: {
         classId,
+        isActive: true, // optional, tapi bagus
       },
+      orderBy: { name: 'asc' },
       select: {
+        id: true,
         name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        classId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
@@ -76,6 +85,38 @@ export class UserRepository {
       data: {
         isActive: false,
       },
+    });
+  }
+
+  listUsers(params?: { role?: Role; isActive?: boolean }) {
+    const where: any = {};
+    if (params?.role) where.role = params.role;
+    if (params?.isActive !== undefined) where.isActive = params.isActive;
+
+    return this.prisma.user.findMany({
+      where,
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        classId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  countUsers(where?: any) {
+    return this.prisma.user.count({ where });
+  }
+
+  groupCountByRole() {
+    return this.prisma.user.groupBy({
+      by: ['role', 'isActive'],
+      _count: { _all: true },
     });
   }
 }
