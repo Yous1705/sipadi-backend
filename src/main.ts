@@ -12,7 +12,18 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: ['https://sipadi-fe-production.up.railway.app'],
+    origin: (origin, cb) => {
+      const allowlist = [
+        'https://sipadi-fe-production.up.railway.app',
+        'http://localhost:3001',
+        'http://localhost:3000',
+      ];
+
+      if (!origin) return cb(null, true);
+
+      if (allowlist.includes(origin)) return cb(null, true);
+      return cb(new Error(`CORS blocked: ${origin}`), false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
