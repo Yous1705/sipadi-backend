@@ -9,6 +9,7 @@ import { ClassesModule } from 'src/classes/classes.module';
 import { AttendanceSessionModule } from 'src/attendance-session/attendance-session.module';
 import { AssignmentModule } from 'src/assignment/assignment.module';
 import { AdminRepository } from './admin.repository';
+import { ReportModule } from 'src/report/report.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AdminRepository } from './admin.repository';
     ClassesModule,
     AttendanceSessionModule,
     AssignmentModule,
+    ReportModule,
   ],
   controllers: [AdminController],
   providers: [AdminService, AdminRepository],

@@ -21,18 +21,35 @@ export class StudentService {
     return s.classId;
   }
 
+  // student.service.ts (BE)
   async getDashboard(studentId: number) {
-    const s = await this.repo.getStudentClassId(studentId);
-    if (!s?.classId) {
-      return { assignments: 0, attendanceSession: 0 };
-    }
-
-    const [assignments, attendanceSession] = await Promise.all([
-      this.repo.countPublishedAssignmentsByClass(s.classId),
-      this.repo.countActiveAttendanceSessionsByClass(s.classId),
+    const [pendingAsg, pendingAtt] = await Promise.all([
+      this.repo.findPendingAssignmentsByStudent(studentId, 6),
+      this.repo.findPendingAttendanceSessionsByStudent(studentId, 6),
     ]);
 
-    return { assignments, attendanceSession };
+    return {
+      pendingAssignmentsCount: pendingAsg.length,
+      pendingAssignments: pendingAsg.map((a) => ({
+        id: a.id,
+        title: a.title,
+        dueDate: a.dueDate,
+        teachingAssigmentId: a.teachingAssigmentId,
+        subjectName: a.teachingAssigment.subject.name,
+        teacherName: a.teachingAssigment.teacher.name,
+      })),
+
+      pendingAttendancesCount: pendingAtt.length,
+      pendingAttendances: pendingAtt.map((s) => ({
+        id: s.id,
+        name: s.name,
+        openAt: s.openAt,
+        closeAt: s.closeAt,
+        teachingAssigmentId: s.teachingAssigmentId,
+        subjectName: s.teachingAssigment.subject.name,
+        teacherName: s.teachingAssigment.teacher.name,
+      })),
+    };
   }
 
   async getMyClasses(studentId: number) {
@@ -227,5 +244,31 @@ export class StudentService {
         isAttended: sess.attendances.length > 0,
       })),
     };
+  }
+
+  async getAssignmentHistoryByClass(studentId: number, classId: number) {
+    await this.assertStudentInClass(studentId, classId);
+
+    const rows = await this.repo.findAssignmentHistoryByClass(
+      classId,
+      studentId,
+      200,
+    );
+
+    return rows.map((a) => ({
+      id: a.id,
+      title: a.title,
+      dueDate: a.dueDate,
+      assignmentStatus: a.status,
+      submissionPolicy: a.submissionPolicy,
+      maxFileSizeMb: a.maxFileSizeMb,
+
+      teachingAssigmentId: a.teachingAssigmentId,
+      subjectName: a.teachingAssigment.subject.name,
+      teacherName: a.teachingAssigment.teacher.name,
+
+      status: a.submissions.length ? 'SUBMITTED' : 'NOT_SUBMITTED',
+      score: a.submissions.length ? a.submissions[0].score : null,
+    }));
   }
 }

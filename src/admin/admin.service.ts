@@ -139,6 +139,10 @@ export class AdminService {
     return this.teachingService.findAllSubject();
   }
 
+  deleteSubject(id: number) {
+    return this.teachingService.deleteSubject(id);
+  }
+
   // ===================== ATTENDANCE SeSSION =====================
   closeAttendanceSession(attendanceSessionId: number, actorUserId: number) {
     return this.attendanceSessionService.close(

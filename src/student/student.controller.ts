@@ -136,6 +136,17 @@ export class StudentController {
     );
   }
 
+  @Get('classes/:classId/assignments/history')
+  getAssignmentHistory(
+    @Req() req,
+    @Param('classId', ParseIntPipe) classId: number,
+  ) {
+    return this.studentService.getAssignmentHistoryByClass(
+      req.user.sub,
+      classId,
+    );
+  }
+
   @Post('attendance')
   attend(@Body() dto: StudentAttendanceDto, @Req() req) {
     return this.attendanceService.studentAttend(dto, req.user.sub);

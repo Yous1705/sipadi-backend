@@ -15,6 +15,7 @@ import {
   Query,
   ParseEnumPipe,
   ParseIntPipe,
+  Res,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.auth.guard';
@@ -35,6 +36,8 @@ import { UpdateAttendanceDto } from 'src/attendance/dto/update-attendance.dto';
 import { AssignmentService } from 'src/assignment/assignment.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from 'src/teaching/dto/update-subject.dto';
+import { ReportService } from 'src/report/report.service';
+import type { Response } from 'express';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -48,6 +51,7 @@ export class AdminController {
     private readonly userService: UserService,
     private readonly classesService: ClassesService,
     private readonly teachingService: TeachingService,
+    private readonly reportService: ReportService,
   ) {}
 
   // ===================== DASHBOARD =====================
@@ -197,6 +201,11 @@ export class AdminController {
     return this.adminService.updateSubject(id, dto);
   }
 
+  @Delete('subjects/:id')
+  deleteSubject(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteSubject(id);
+  }
+
   // ===================== ATTENDANCE SESSION ==============
   @Patch('attendance-session/:id/close')
   closeSession(@Param('id', ParseIntPipe) id: number, @Req() req) {
@@ -215,5 +224,25 @@ export class AdminController {
     @Body() dto: UpdateAttendanceDto,
   ) {
     return this.adminService.updateAttendance(id, dto);
+  }
+
+  // ============== REPORTS ==============
+  @Get('reports/class/:classId')
+  getClassReport(@Param('classId', ParseIntPipe) classId: number) {
+    return this.reportService.getClassSummaryReportAdmin(classId);
+  }
+
+  @Get('reports/teaching/:teachingId/grades')
+  getGradeReport(@Param('teachingId', ParseIntPipe) teachingId: number) {
+    return this.reportService.getGradeReportAdmin(teachingId);
+  }
+
+  @Get('reports/class/:classId/export')
+  exportClassReport(
+    @Param('classId', ParseIntPipe) classId: number,
+    @Query('format') format: 'csv' | 'xlsx',
+    @Res() res: Response,
+  ) {
+    return this.reportService.exportClassReportAdmin(classId, format, res);
   }
 }

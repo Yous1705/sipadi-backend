@@ -89,4 +89,8 @@ export class TeachingService {
   findAllSubject() {
     return this.prisma.subject.findMany();
   }
+
+  deleteSubject(id: number) {
+    return this.repo.deleteSubject(id);
+  }
 }

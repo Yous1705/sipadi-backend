@@ -56,8 +56,10 @@ export class ReportRepository {
   getAttendancesByClass(classId: number) {
     return this.prisma.attendance.findMany({
       where: {
-        teachingAssigment: {
-          classId,
+        attendanceSession: {
+          teachingAssigment: {
+            classId,
+          },
         },
       },
       select: {

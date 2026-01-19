@@ -8,4 +8,7 @@ export class UpdateClassDto {
   @IsOptional()
   @IsInt()
   year?: number;
+
+  @IsOptional()
+  isActive?: boolean;
 }

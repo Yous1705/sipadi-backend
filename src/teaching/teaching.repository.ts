@@ -68,4 +68,11 @@ export class TeachingRepository {
       },
     });
   }
+  deleteSubject(id: number) {
+    return this.prisma.subject.delete({
+      where: {
+        id,
+      },
+    });
+  }
 }

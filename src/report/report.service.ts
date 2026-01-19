@@ -4,6 +4,7 @@ import * as ExcelJS from 'exceljs';
 import { ReportRepository } from './report.repository';
 import { AttendanceStatus } from '@prisma/client';
 import { Response } from 'express';
+
 @Injectable()
 export class ReportService {
   constructor(private readonly repo: ReportRepository) {}
@@ -15,6 +16,129 @@ export class ReportService {
       throw new ForbiddenException();
     }
 
+    return this.buildGradeReport(teachingId, teaching);
+  }
+
+  async getClassSummaryReport(classId: number, teacherId: number) {
+    const classroom = await this.repo.getClassWithStudents(classId);
+
+    if (!classroom || classroom.homeroomTeacherId !== teacherId) {
+      throw new ForbiddenException();
+    }
+
+    const teachings = await this.repo.getTeachingAssignmentsByClass(classId);
+    const attendances = await this.repo.getAttendancesByClass(classId);
+
+    return this.buildClassReport(classId, classroom, teachings, attendances);
+  }
+
+  async exportClassReport(
+    classId: number,
+    teacherId: number,
+    format: 'csv' | 'xlsx',
+    res: Response,
+  ) {
+    const report = await this.getClassSummaryReport(classId, teacherId);
+
+    if (format === 'csv') {
+      return this.homeroomExportCsv(report, res);
+    }
+
+    if (format === 'xlsx') {
+      return this.homeroomExportXlsx(report, res);
+    }
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Class Report');
+
+    ws.addRow([
+      'Nama',
+      ...report.subjects.map((s) => s.name),
+      'Average',
+      'Rank',
+      'Hadir',
+      'Izin',
+      'Sakit',
+      'Alpha',
+    ]);
+
+    report.students.forEach((s) => {
+      ws.addRow([
+        s.name,
+        ...report.subjects.map(
+          (sub) => s.grades.find((g) => g.subjectId === sub.id)?.average ?? '',
+        ),
+        s.overallAverage ?? '',
+        s.rank ?? '',
+        s.attendance.HADIR,
+        s.attendance.IZIN,
+        s.attendance.SAKIT,
+        s.attendance.ALPHA,
+      ]);
+    });
+
+    ws.addRow([]);
+    ws.addRow(['CLASS AVERAGE']);
+    ws.addRow([
+      '',
+      ...report.subjects.map((s) => `${s.classAverage ?? '-'} (${s.grade})`),
+    ]);
+
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="class-report-${report.className}.xlsx"`,
+    );
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+
+    await wb.xlsx.write(res);
+    res.end();
+  }
+
+  async getGradeReportAdmin(teachingId: number) {
+    const teaching = await this.repo.getGradeReport(teachingId);
+
+    if (!teaching) {
+      throw new ForbiddenException();
+    }
+
+    return this.buildGradeReport(teachingId, teaching);
+  }
+
+  async getClassSummaryReportAdmin(classId: number) {
+    const classroom = await this.repo.getClassWithStudents(classId);
+
+    if (!classroom) {
+      throw new ForbiddenException();
+    }
+
+    const teachings = await this.repo.getTeachingAssignmentsByClass(classId);
+    const attendances = await this.repo.getAttendancesByClass(classId);
+
+    return this.buildClassReport(classId, classroom, teachings, attendances);
+  }
+
+  async exportClassReportAdmin(
+    classId: number,
+    format: 'csv' | 'xlsx',
+    res: Response,
+  ) {
+    const report = await this.getClassSummaryReportAdmin(classId);
+
+    if (format === 'csv') {
+      return this.homeroomExportCsv(report, res);
+    }
+
+    if (format === 'xlsx') {
+      return this.homeroomExportXlsx(report, res);
+    }
+
+    return this.homeroomExportCsv(report, res);
+  }
+
+  private buildGradeReport(teachingId: number, teaching: any) {
     const totalAssignments = teaching.assignment.length;
 
     const studentsReport = teaching.class.students.map((student) => {
@@ -59,16 +183,12 @@ export class ReportService {
     };
   }
 
-  async getClassSummaryReport(classId: number, teacherId: number) {
-    const classroom = await this.repo.getClassWithStudents(classId);
-
-    if (!classroom || classroom.homeroomTeacherId !== teacherId) {
-      throw new ForbiddenException();
-    }
-
-    const teachings = await this.repo.getTeachingAssignmentsByClass(classId);
-    const attendances = await this.repo.getAttendancesByClass(classId);
-
+  private buildClassReport(
+    classId: number,
+    classroom: any,
+    teachings: any[],
+    attendances: any[],
+  ) {
     const subjects = teachings.map((t) => ({
       id: t.subject.id,
       name: t.subject.name,
@@ -195,71 +315,6 @@ export class ReportService {
     };
   }
 
-  async exportClassReport(
-    classId: number,
-    teacherId: number,
-    format: 'csv' | 'xlsx',
-    res: Response,
-  ) {
-    const report = await this.getClassSummaryReport(classId, teacherId);
-
-    if (format === 'csv') {
-      return this.homeroomExportCsv(report, res);
-    }
-
-    if (format === 'xlsx') {
-      return this.homeroomExportXlsx(report, res);
-    }
-
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet('Class Report');
-
-    ws.addRow([
-      'Nama',
-      ...report.subjects.map((s) => s.name),
-      'Average',
-      'Rank',
-      'Hadir',
-      'Izin',
-      'Sakit',
-      'Alpha',
-    ]);
-
-    report.students.forEach((s) => {
-      ws.addRow([
-        s.name,
-        ...report.subjects.map(
-          (sub) => s.grades.find((g) => g.subjectId === sub.id)?.average ?? '',
-        ),
-        s.overallAverage ?? '',
-        s.rank ?? '',
-        s.attendance.HADIR,
-        s.attendance.IZIN,
-        s.attendance.SAKIT,
-        s.attendance.ALPHA,
-      ]);
-    });
-
-    ws.addRow([]);
-    ws.addRow(['CLASS AVERAGE']);
-    ws.addRow([
-      '',
-      ...report.subjects.map((s) => `${s.classAverage ?? '-'} (${s.grade})`),
-    ]);
-
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="class-report-${report.className}.xlsx"`,
-    );
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
-
-    await wb.xlsx.write(res);
-    res.end();
-  }
-  //  ===== Helper ==========
   exportCsv(report: {
     className: string;
     assignments: { id: number; title: string }[];
@@ -384,6 +439,7 @@ export class ReportService {
     res.setHeader('Content-Type', 'text/csv');
     res.send(csv);
   }
+
   async homeroomExportXlsx(report: any, res) {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Class Report');

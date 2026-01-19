@@ -263,4 +263,87 @@ export class StudentRepository {
       },
     });
   }
+
+  findPendingAssignmentsByStudent(studentId: number, take = 6) {
+    return this.prisma.assignment.findMany({
+      where: {
+        status: AssignmentStatus.PUBLISHED,
+        deletedAt: null,
+        dueDate: { gte: new Date() },
+        teachingAssigment: {
+          class: { students: { some: { id: studentId } } },
+        },
+        submissions: {
+          none: { studentId },
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        dueDate: true,
+        teachingAssigmentId: true,
+        teachingAssigment: {
+          select: {
+            subject: { select: { name: true } },
+            teacher: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+      take,
+    });
+  }
+
+  findPendingAttendanceSessionsByStudent(studentId: number, take = 6) {
+    return this.prisma.attendanceSession.findMany({
+      where: {
+        isActive: true,
+        teachingAssigment: {
+          class: { students: { some: { id: studentId } } },
+        },
+        attendances: {
+          none: { studentId }, // belum absen
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        openAt: true,
+        closeAt: true,
+        teachingAssigmentId: true,
+        teachingAssigment: {
+          select: {
+            subject: { select: { name: true } },
+            teacher: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { openAt: 'desc' },
+      take,
+    });
+  }
+
+  // student.repository.ts (contoh)
+  findAssignmentHistoryByClass(classId: number, studentId: number, take = 100) {
+    return this.prisma.assignment.findMany({
+      where: {
+        deletedAt: null,
+        teachingAssigment: { classId },
+      },
+      include: {
+        teachingAssigment: {
+          include: {
+            subject: true,
+            teacher: true,
+          },
+        },
+        submissions: {
+          where: { studentId },
+          take: 1,
+        },
+      },
+      orderBy: { dueDate: 'desc' },
+      take,
+    });
+  }
 }
