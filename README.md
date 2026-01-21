@@ -231,37 +231,6 @@ All protected endpoints require `Authorization: Bearer <JWT_TOKEN>` header.
 
 Permissions are enforced via JWT strategy and role guards.
 
-## Error Handling Strategy
-
-The API uses NestJS built-in exception handling:
-
-- Validation errors (400) for invalid input data.
-- Unauthorized (401) for missing/invalid JWT.
-- Forbidden (403) for insufficient permissions.
-- Not Found (404) for missing resources.
-- Internal Server Error (500) for unexpected issues.
-
-Custom exceptions like `ForbiddenException` are used for business logic violations. Responses include error messages for debugging.
-
-## Security Considerations
-
-- JWT tokens are used for stateless authentication with secure secrets.
-- Passwords are hashed before storage.
-- Input validation via DTOs prevents injection attacks.
-- Role-based guards restrict access to sensitive endpoints.
-- File uploads are limited to 2MB and stored securely.
-- HTTPS should be enforced in production.
-- Environment variables protect sensitive data like database credentials and JWT secrets.
-
-## Future Improvements
-
-- Implement refresh tokens for better session management.
-- Add API rate limiting to prevent abuse.
-- Integrate with external services (e.g., email notifications for assignments).
-- Enhance reporting with more analytics and visualizations.
-- Add unit and integration tests for better coverage.
-- Implement caching for improved performance on frequent queries.
-
 ## Live Demo
 
 [https://sipadi-backend-production.up.railway.app/](https://sipadi-backend-production.up.railway.app/)
