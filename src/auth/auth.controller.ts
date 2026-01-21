@@ -14,11 +14,4 @@ export class AuthController {
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
-
-  @Post('register-admin')
-  registerAdmin(
-    @Body() dto: { name: string; email: string; password: string },
-  ) {
-    return this.authService.registerAdmin(dto);
-  }
 }

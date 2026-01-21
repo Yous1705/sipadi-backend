@@ -61,6 +61,10 @@ Relationships:
 - AttendanceSession belongs to TeachingAssigment; has many Attendances.
 - Attendance belongs to User (student), AttendanceSession, TeachingAssigment, and User (createdBy).
 
+## Database ERD
+
+![Database ERD](<public/images/prisma-erd%20(1).svg>)
+
 ## API Flow
 
 1. **Authentication**: Users log in via `POST /auth/login` with email/password to receive a JWT token.
@@ -93,33 +97,135 @@ Relationships:
 ### Authentication Endpoints
 
 - `POST /auth/login`: Authenticate user and return JWT token.
-- `POST /auth/register-admin`: Register a new admin user.
 
-### Main Resource Endpoints
+### Admin Endpoints
 
-- **Teacher**:
-  - `POST /teacher/assignments`: Create assignment.
-  - `GET /teacher/assignments`: List teacher's assignments.
-  - `PATCH /teacher/assignments/:id/publish`: Publish assignment.
-  - `PATCH /teacher/assignments/:id/close`: Close assignment.
-  - `PATCH /teacher/submissions/:id/grade`: Grade submission.
-  - `GET /teacher/reports/teaching/:id/grades`: Get grade report.
-  - `GET /teacher/reports/class/:id/export`: Export class report (CSV/XLSX).
-  - `POST /teacher/attendance-sessions`: Open attendance session.
-  - `PATCH /teacher/attendance-sessions/:id/close`: Close attendance session.
-  - `PATCH /teacher/attendances/:id`: Update attendance.
-- **Student**:
-  - `GET /student/dashboard`: Get student dashboard.
-  - `POST /student/assignments/:id/submission/url`: Submit assignment via URL.
-  - `POST /student/assignments/:id/submission/file`: Submit assignment via file upload.
-  - `GET /student/classes/:classId/attendance/active`: Get active attendance sessions.
-  - `POST /student/attendance`: Mark attendance.
+#### Dashboard
+
+- `GET /admin/dashboard`: Get admin dashboard overview.
+
+#### Users
+
+- `POST /admin/students`: Create a new student.
+- `POST /admin/teachers`: Create a new teacher.
+- `PATCH /admin/users/:id/reset-password`: Reset user password.
+- `PATCH /admin/users/:id/role`: Change user role.
+- `GET /admin/users`: List all users (with optional filters: role, isActive).
+- `GET /admin/users/:id`: Get user by ID.
+- `GET /admin/users/role/:role`: Get users by role.
+- `GET /admin/classes/:id/users`: Get users in a class.
+
+#### Classes
+
+- `GET /admin/classes`: List all classes.
+- `GET /admin/classes/by-name/:name/:year`: Find class by name and year.
+- `GET /admin/classes/:id`: Get class by ID.
+- `POST /admin/classes`: Create a new class.
+- `PATCH /admin/classes/:id`: Update class.
+- `DELETE /admin/classes/:id`: Delete class.
+- `POST /admin/classes/homeroom`: Assign homeroom teacher.
+- `PATCH /admin/classes/student/move`: Move student to another class.
+- `PATCH /admin/classes/student/:id/remove-class`: Remove student from class.
+
+#### Teaching Assignments
+
+- `GET /admin/teaching-assignments`: List all teaching assignments.
+- `POST /admin/teaching-assignments`: Assign teacher to class and subject.
+- `DELETE /admin/teaching-assignments/:id`: Unassign teacher.
+
+#### Subjects
+
+- `GET /admin/subjects`: List all subjects.
+- `POST /admin/subjects`: Create a new subject.
+- `PATCH /admin/subjects/:id`: Update subject.
+- `DELETE /admin/subjects/:id`: Delete subject.
+
+#### Attendance Sessions
+
+- `PATCH /admin/attendance-session/:id/close`: Close attendance session.
+
+#### Attendances
+
+- `GET /admin/attendances`: Get attendances (with query filters).
+- `PATCH /admin/attendances/:id`: Update attendance.
+
+#### Reports
+
+- `GET /admin/reports/class/:classId`: Get class summary report.
+- `GET /admin/reports/teaching/:teachingId/grades`: Get grade report for teaching.
+- `GET /admin/reports/class/:classId/export`: Export class report (CSV/XLSX).
+
+### Teacher Endpoints
+
+#### Assignments
+
+- `POST /teacher/assignments`: Create assignment.
+- `PATCH /teacher/assignments/:id`: Update assignment.
+- `GET /teacher/assignments`: List teacher's assignments (with optional teachingAssigmentId filter).
+- `GET /teacher/assignments/:id`: Get assignment by ID.
+- `GET /teacher/assignments/:id/detail`: Get assignment detail.
+- `PATCH /teacher/assignments/:id/publish`: Publish assignment.
+- `PATCH /teacher/assignments/:id/close`: Close assignment.
+- `DELETE /teacher/assignments/:id`: Soft delete assignment.
+- `DELETE /teacher/assignments/:id/hard`: Hard delete assignment.
+- `GET /teacher/assignments/:id/submissions`: Get submissions for assignment.
+
+#### Submissions
+
+- `PATCH /teacher/submissions/:id/grade`: Grade submission.
+- `PATCH /teacher/submissions/:id/reset-grade`: Reset grade.
+
+#### Reports
+
+- `GET /teacher/reports/teaching/:id/grades`: Get grade report.
+- `GET /teacher/reports/teaching/:id/grades/export`: Export grade report (CSV/XLSX).
+- `GET /teacher/reports/class/:id/export`: Export class report (CSV/XLSX).
+- `GET /teacher/reports/class/:id`: Get class summary report.
+
+#### Teachings
+
+- `GET /teacher/teachings`: Get teacher's teachings.
+- `GET /teacher/teachings/:id/students`: Get students in teaching.
+- `GET /teacher/teachings/:id/assignment`: Get assignments in teaching.
+- `GET /teacher/homeroom/class`: Get homeroom class.
+
+#### Attendance Sessions
+
+- `POST /teacher/attendance-sessions`: Open attendance session.
+- `DELETE /teacher/attendance-sessions/:id`: Delete attendance session.
+- `PATCH /teacher/attendance-sessions/:id/close`: Close attendance session.
+- `GET /teacher/attendance-sessions/teaching/:id`: List sessions by teaching.
+- `GET /teacher/attendance-sessions/:id/detail`: Get session detail with students.
+- `GET /teacher/attendance-sessions/:id/attendances`: Get attendances for session.
+- `GET /teacher/attendance-sessions/teaching/:id/progress`: Get attendance progress.
+- `PATCH /teacher/attendance-sessions/:id`: Update attendance session.
+
+#### Attendances
+
+- `PATCH /teacher/attendances/:id`: Update attendance.
+- `POST /teacher/attendances/bulk`: Bulk create attendances.
+
+### Student Endpoints
+
+- `GET /student/dashboard`: Get student dashboard.
+- `GET /student/subjects`: Get student's subjects.
+- `GET /student/subjects/:teachingAssigmentId`: Get subject hub.
+- `GET /student/classes`: Get student's classes.
+- `GET /student/classes/:classId`: Get class detail.
+- `GET /student/assignments/:assignmentId`: Get assignment detail.
+- `POST /student/assignments/:id/submission/url`: Submit assignment via URL.
+- `POST /student/assignments/:id/submission/file`: Submit assignment via file upload.
+- `GET /student/attendance/session/:sessionId`: Get attendance session detail.
+- `GET /student/classes/:classId/attendance/active`: Get active attendance sessions.
+- `GET /student/classes/:classId/attendance/history`: Get attendance history.
+- `GET /student/classes/:classId/assignments/history`: Get assignment history.
+- `POST /student/attendance`: Mark attendance.
 
 All protected endpoints require `Authorization: Bearer <JWT_TOKEN>` header.
 
 ## Role & Permission Overview
 
-- **ADMIN**: Full access to manage users, classes, and system-wide operations (endpoints currently commented out in code).
+- **ADMIN**: Full access to manage users, classes, teaching assignments, subjects, attendance, and generate reports.
 - **TEACHER**: Can create and manage assignments, grade submissions, manage attendance sessions, and generate reports for their teachings.
 - **STUDENT**: Can view assignments, submit work (URL or file), view attendance history, and mark attendance for active sessions.
 
@@ -155,7 +261,10 @@ Custom exceptions like `ForbiddenException` are used for business logic violatio
 - Enhance reporting with more analytics and visualizations.
 - Add unit and integration tests for better coverage.
 - Implement caching for improved performance on frequent queries.
-- Add admin endpoints for full CRUD operations on users and classes.
+
+## Live Demo
+
+[https://sipadi-backend-production.up.railway.app/](https://sipadi-backend-production.up.railway.app/)
 
 ## Author
 

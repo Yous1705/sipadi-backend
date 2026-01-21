@@ -53,16 +53,4 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
-
-  async registerAdmin(data: { name: string; email: string; password: string }) {
-    const hashed = await bcrypt.hash(data.password, 10);
-    return this.prisma.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        password: hashed,
-        role: 'ADMIN',
-      },
-    });
-  }
 }

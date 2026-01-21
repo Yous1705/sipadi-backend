@@ -13,6 +13,15 @@ async function bootstrap() {
     }),
   );
 
+  // app.enableCors({
+  //   origin: ['http://localhost:3001'],
+  //   credentials: true,
+  //   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  //   allowedHeaders: ['Content-Type', 'Authorization'],
+  // });
+
+  // await app.listen(process.env.PORT ?? 3000);
+
   const allowlist = new Set([
     'https://sipadi-fe-production.up.railway.app',
     'http://localhost:3000',
@@ -39,14 +48,5 @@ async function bootstrap() {
 }
 
 bootstrap();
-
-// app.enableCors({
-//   origin: ['http://localhost:3001'],
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-// });
-
-// await app.listen(process.env.PORT ?? 3000);
 
 // bootstrap();
