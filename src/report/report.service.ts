@@ -2,12 +2,16 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { stringify } from 'csv-stringify/sync';
 import * as ExcelJS from 'exceljs';
 import { ReportRepository } from './report.repository';
-import { AttendanceStatus } from '@prisma/client';
+import { AttendanceStatus, Prisma } from '@prisma/client';
 import { Response } from 'express';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ReportService {
-  constructor(private readonly repo: ReportRepository) {}
+  constructor(
+    private readonly repo: ReportRepository,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async getGradeReport(teachingId: number, teacherId: number) {
     const teaching = await this.repo.getGradeReport(teachingId);
@@ -138,7 +142,7 @@ export class ReportService {
     return this.homeroomExportCsv(report, res);
   }
 
-  private buildGradeReport(teachingId: number, teaching: any) {
+  private buildGradeReport(teachingId: number, teaching: GradeReportTeaching) {
     const totalAssignments = teaching.assignment.length;
 
     const studentsReport = teaching.class.students.map((student) => {
@@ -185,9 +189,9 @@ export class ReportService {
 
   private buildClassReport(
     classId: number,
-    classroom: any,
-    teachings: any[],
-    attendances: any[],
+    classroom: ClassWithStudents,
+    teachings: TeachingsByClass[],
+    attendances: AttendanceByClassRow[],
   ) {
     const subjects = teachings.map((t) => ({
       id: t.subject.id,
@@ -498,3 +502,30 @@ function toGrade(avg: number | null): 'A' | 'B' | 'C' | 'D' | null {
   if (avg >= 55) return 'C';
   return 'D';
 }
+
+type GradeReportTeaching = Prisma.TeachingAssigmentGetPayload<{
+  include: {
+    class: { include: { students: true } };
+    assignment: { include: { submissions: true } };
+  };
+}>;
+
+type ClassWithStudents = Prisma.ClassGetPayload<{
+  include: {
+    students: { select: { id: true; name: true } };
+    homeroomTeacher: true;
+  };
+}>;
+
+type TeachingsByClass = Prisma.TeachingAssigmentGetPayload<{
+  include: {
+    subject: true;
+    assignment: {
+      include: { submissions: true };
+    };
+  };
+}>;
+
+type AttendanceByClassRow = Prisma.AttendanceGetPayload<{
+  select: { studentId: true; status: true };
+}>;
